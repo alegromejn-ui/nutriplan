@@ -166,6 +166,22 @@
                 </button>
             </div>
         </div>
+        <!-- Міні-прогрес дня (закріплений разом із шапкою) -->
+        <div class="border-t border-slate-100">
+            <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-1.5 flex items-center gap-3" aria-live="off">
+                <div class="text-[11px] sm:text-xs font-bold whitespace-nowrap">
+                    <span id="mini-kcal" class="text-slate-900">0</span><span class="text-slate-400 font-semibold"> / <span id="mini-target">0</span> ккал</span><span id="mini-over" class="hidden text-rose-700 ml-1"></span>
+                </div>
+                <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div id="mini-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <div class="flex items-center gap-2 text-[10px] sm:text-xs font-semibold text-slate-600 whitespace-nowrap">
+                    <span class="inline-flex items-center gap-1" title="Білки, г"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>Б <span id="mini-p">0</span></span>
+                    <span class="inline-flex items-center gap-1" title="Жири, г"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Ж <span id="mini-f">0</span></span>
+                    <span class="inline-flex items-center gap-1" title="Вуглеводи, г"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>В <span id="mini-c">0</span></span>
+                </div>
+            </div>
+        </div>
     </header>
 
     <!-- Основний контент -->
@@ -536,6 +552,55 @@
                     </div>
                 </section>
 
+                <!-- ВОДА ТА ВАГА -->
+                <section id="water-weight-section" class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-5 sm:p-6">
+                    <div class="mb-4">
+                        <h2 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
+                            <i data-lucide="Droplets" class="w-5 h-5 text-sky-600"></i>
+                            <span>Вода та вага</span>
+                        </h2>
+                        <p class="text-xs text-slate-500">Дані за вибрану дату: <strong id="ww-date-label" class="text-slate-700">Сьогодні</strong></p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Вода -->
+                        <div class="bg-slate-50 rounded-xl border border-slate-100 p-4">
+                            <div class="flex items-baseline justify-between mb-1">
+                                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Вода</span>
+                                <span id="water-pct" class="text-[11px] font-semibold text-slate-400">0%</span>
+                            </div>
+                            <div class="text-slate-800 mb-2">
+                                <span id="water-value" class="text-xl font-extrabold">0</span>
+                                <span class="text-sm text-slate-400 font-normal"> / <span id="water-goal">2</span> л</span>
+                            </div>
+                            <div class="w-full h-2.5 bg-sky-100 rounded-full overflow-hidden mb-3">
+                                <div id="water-bar" class="h-full bg-sky-500 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                <button type="button" onclick="addWater(250)" class="px-3 py-2 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-800 text-xs font-bold border border-sky-200 transition-colors">+250 мл</button>
+                                <button type="button" onclick="addWater(500)" class="px-3 py-2 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-800 text-xs font-bold border border-sky-200 transition-colors">+500 мл</button>
+                                <button type="button" onclick="addWater(-250)" class="px-3 py-2 rounded-lg bg-white hover:bg-slate-100 text-slate-600 text-xs font-bold border border-slate-200 transition-colors" title="Відняти 250 мл, якщо натиснули зайвий раз">−250</button>
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-2 leading-snug">Орієнтир: близько 30 мл на кг ваги. Це загальне правило, а не медична норма.</p>
+                        </div>
+
+                        <!-- Вага -->
+                        <div class="bg-slate-50 rounded-xl border border-slate-100 p-4">
+                            <div class="flex items-baseline justify-between gap-2 mb-2">
+                                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Вага</span>
+                                <span id="weight-delta" class="text-[11px] font-semibold text-slate-500 text-right"></span>
+                            </div>
+                            <form onsubmit="saveWeightEntry(event)" class="flex gap-2 mb-3">
+                                <input id="weight-input" type="number" inputmode="decimal" step="0.1" min="25" max="300" placeholder="кг" aria-label="Вага в кілограмах" class="w-full min-w-0 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20">
+                                <button type="submit" class="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold whitespace-nowrap transition-colors">Записати</button>
+                            </form>
+                            <div id="weight-chart"></div>
+                            <div id="weight-readout" class="text-[11px] font-semibold text-slate-600 mt-1 min-h-[16px]"></div>
+                            <button type="button" id="weight-delete-btn" onclick="deleteWeightEntry()" class="hidden mt-1 text-[11px] text-slate-400 hover:text-rose-600 hover:underline">Видалити запис за цей день</button>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- БЛОК AI-СКАНЕРА ТАРІЛКИ ПО ФОТО -->
                 <section id="ai-scanner-section" class="bg-gradient-to-br from-violet-950 via-slate-900 to-emerald-950 text-white rounded-2xl shadow-lg p-5 sm:p-6 border border-violet-500/30 relative overflow-hidden">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
@@ -709,6 +774,20 @@
                             <button onclick="clearCurrentMeal()" id="btn-clear-meal" class="text-xs text-rose-600 hover:text-rose-700 font-medium hover:underline hidden">
                                 Очистити прийом
                             </button>
+                        </div>
+
+                        <!-- Шаблони прийомів їжі -->
+                        <div class="mb-4">
+                            <div class="flex items-center justify-between gap-2 mb-2">
+                                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Мої шаблони</span>
+                                <button type="button" id="btn-save-template" onclick="toggleTemplateForm(true)" class="hidden text-xs font-semibold text-emerald-700 hover:text-emerald-800 hover:underline">+ Зберегти цей прийом як шаблон</button>
+                            </div>
+                            <form id="template-form" onsubmit="saveMealTemplate(event)" class="hidden gap-2 mb-2">
+                                <input id="template-name" type="text" maxlength="40" required placeholder="Назва, наприклад: Мій сніданок" aria-label="Назва шаблону" class="w-full min-w-0 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20">
+                                <button type="submit" class="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold whitespace-nowrap">Зберегти</button>
+                                <button type="button" onclick="toggleTemplateForm(false)" class="px-2.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold" aria-label="Скасувати">✕</button>
+                            </form>
+                            <div id="meal-templates-list" class="flex flex-wrap gap-2"></div>
                         </div>
 
                         <div id="meal-items-list" class="space-y-2.5 min-h-[120px]"></div>
@@ -1082,7 +1161,10 @@
             selectedDate: getTodayDateString(), // формату YYYY-MM-DD
             history: {}, // { '2026-10-15': { breakfast: [], lunch: [], dinner: [], snack: [] } }
             customFoods: [],
-            recentFoodIds: []
+            recentFoodIds: [],
+            mealTemplates: [],   // [{ id, name, items: [{ foodId, grams }] }]
+            water: {},           // { '2026-10-15': 1750 }  (мл)
+            weights: {}          // { '2026-10-15': 72.4 }  (кг)
         };
 
         let aiScannerState = {
@@ -1111,6 +1193,8 @@
             recalculateAll();
             renderDateHeader();
             renderFoodDatabase();
+            renderMealTemplates();
+            renderWaterWeight(true);
             lucide.createIcons();
             requestPersistentStorage();
             checkBackupReminder();
@@ -1266,6 +1350,9 @@
                         state.selectedDate = getTodayDateString();
                         state.customFoods = parsed.customFoods || [];
                         state.recentFoodIds = parsed.recentFoodIds || [];
+                        state.mealTemplates = parsed.mealTemplates || [];
+                        state.water = parsed.water || {};
+                        state.weights = parsed.weights || {};
                         syncUIFromProfile();
                         recalculateAll();
                         renderDateHeader();
@@ -1301,6 +1388,9 @@
                         history: parsed.history || {},
                         customFoods: parsed.customFoods || [],
                         recentFoodIds: parsed.recentFoodIds || [],
+                        mealTemplates: parsed.mealTemplates || [],
+                        water: parsed.water || {},
+                        weights: parsed.weights || {},
                         selectedDate: getTodayDateString()
                     };
                 } else {
@@ -1922,6 +2012,9 @@
             const fPct = targetF > 0 ? Math.round((dayF / targetF) * 100) : 0;
             const cPct = targetC > 0 ? Math.round((dayC / targetC) * 100) : 0;
 
+            updateMiniProgress(dayKcal, targetKcal, dayP, dayF, dayC, kcalPct);
+            if (rebuild) renderWaterWeight(false);
+
             document.getElementById('consumed-kcal').textContent = dayKcal;
             document.getElementById('target-kcal-bar').textContent = `${targetKcal} ккал`;
             document.getElementById('consumed-kcal-pct').textContent = `(${kcalPct}%)`;
@@ -1953,6 +2046,9 @@
 
             const items = dayMeals[activeMealTab];
             document.getElementById('btn-clear-meal').classList.toggle('hidden', items.length === 0);
+            document.getElementById('btn-save-template').classList.toggle('hidden', items.length === 0);
+            if (items.length === 0) toggleTemplateForm(false);
+            if (rebuild) renderMealTemplates();
 
             if (!rebuild) {
                 items.forEach(item => {
@@ -2002,6 +2098,302 @@
                 `;
             }).join('');
             lucide.createIcons();
+        }
+
+        // ==========================================
+        // МІНІ-ПРОГРЕС (закріплений під шапкою)
+        // ==========================================
+        function updateMiniProgress(dayKcal, targetKcal, dayP, dayF, dayC, kcalPct) {
+            const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+            set('mini-kcal', dayKcal);
+            set('mini-target', targetKcal);
+            set('mini-p', dayP);
+            set('mini-f', dayF);
+            set('mini-c', dayC);
+
+            const over = dayKcal - targetKcal;
+            const isOver = targetKcal > 0 && over > 0;
+            const bar = document.getElementById('mini-bar');
+            if (bar) {
+                bar.style.width = `${Math.min(100, kcalPct)}%`;
+                bar.className = 'h-full rounded-full transition-all duration-300 ' + (isOver ? 'bg-rose-500' : 'bg-emerald-500');
+            }
+            const kEl = document.getElementById('mini-kcal');
+            if (kEl) kEl.className = isOver ? 'text-rose-700' : 'text-slate-900';
+            const overEl = document.getElementById('mini-over');
+            if (overEl) {
+                overEl.classList.toggle('hidden', !isOver);
+                overEl.textContent = isOver ? `(+${over})` : '';
+            }
+        }
+
+        // ==========================================
+        // ШАБЛОНИ ПРИЙОМІВ ЇЖІ
+        // ==========================================
+        const MAX_MEAL_TEMPLATES = 30;
+
+        function toggleTemplateForm(show) {
+            const form = document.getElementById('template-form');
+            if (!form) return;
+            form.classList.toggle('hidden', !show);
+            form.classList.toggle('flex', !!show);
+            if (show) {
+                const inp = document.getElementById('template-name');
+                inp.value = '';
+                inp.focus();
+            }
+        }
+
+        function getTemplateTotals(tpl) {
+            const foods = getAllFoods();
+            let kcal = 0;
+            let valid = 0;
+            (tpl.items || []).forEach(it => {
+                const food = foods.find(f => f.id === it.foodId);
+                if (food) { kcal += food.kcal * (it.grams / 100); valid++; }
+            });
+            return { kcal: Math.round(kcal), valid };
+        }
+
+        function renderMealTemplates() {
+            const box = document.getElementById('meal-templates-list');
+            if (!box) return;
+            const list = state.mealTemplates || [];
+            if (list.length === 0) {
+                box.innerHTML = '<p class="text-xs text-slate-400">Збережіть прийом їжі як шаблон, щоб потім додавати його одним натиском.</p>';
+                return;
+            }
+            box.innerHTML = list.map(tpl => {
+                const t = getTemplateTotals(tpl);
+                return `
+                    <div class="inline-flex items-stretch rounded-xl border border-emerald-200 bg-emerald-50 overflow-hidden max-w-full">
+                        <button type="button" onclick="applyMealTemplate('${tpl.id}')" class="px-3 py-2 text-xs font-semibold text-emerald-900 hover:bg-emerald-100 text-left truncate" title="Додати у ${escapeHtml(MEAL_NAMES[activeMealTab])}">
+                            ${escapeHtml(tpl.name)} <span class="font-normal text-emerald-700">· ${t.kcal} ккал</span>
+                        </button>
+                        <button type="button" onclick="deleteMealTemplate('${tpl.id}')" class="px-2.5 text-emerald-700/60 hover:text-rose-600 hover:bg-rose-50 border-l border-emerald-200 text-sm leading-none" aria-label="Видалити шаблон ${escapeHtml(tpl.name)}">×</button>
+                    </div>`;
+            }).join('');
+        }
+
+        function saveMealTemplate(e) {
+            e.preventDefault();
+            const name = document.getElementById('template-name').value.trim();
+            if (!name) return;
+            const foods = getAllFoods();
+            const items = (getActiveDayMeals()[activeMealTab] || [])
+                .filter(it => foods.some(f => f.id === it.foodId))
+                .map(it => ({ foodId: it.foodId, grams: it.grams }));
+            if (items.length === 0) { showToast('У прийомі немає продуктів для шаблону'); return; }
+            if ((state.mealTemplates || []).length >= MAX_MEAL_TEMPLATES) {
+                showToast(`Максимум ${MAX_MEAL_TEMPLATES} шаблонів. Видаліть непотрібні.`);
+                return;
+            }
+            state.mealTemplates.unshift({ id: 'tpl_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4), name, items });
+            toggleTemplateForm(false);
+            renderMealTemplates();
+            saveStateToStorage();
+            showToast(`Шаблон «${name}» збережено`);
+        }
+
+        function applyMealTemplate(id) {
+            const tpl = (state.mealTemplates || []).find(t => t.id === id);
+            if (!tpl) return;
+            const foods = getAllFoods();
+            const meal = getActiveDayMeals()[activeMealTab];
+            let added = 0, skipped = 0;
+            tpl.items.forEach(it => {
+                if (!foods.some(f => f.id === it.foodId)) { skipped++; return; }
+                const existing = meal.find(m => m.foodId === it.foodId);
+                if (existing) {
+                    existing.grams += it.grams;
+                } else {
+                    meal.push({
+                        instanceId: 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                        foodId: it.foodId, grams: it.grams
+                    });
+                }
+                rememberRecentFood(it.foodId);
+                added++;
+            });
+            renderMealPlanUI(true);
+            renderFoodDatabase();
+            saveStateToStorage();
+            showToast(skipped
+                ? `Шаблон додано (${skipped} прод. більше немає в базі)`
+                : `Шаблон «${tpl.name}» додано у ${MEAL_NAMES[activeMealTab]}`);
+        }
+
+        function deleteMealTemplate(id) {
+            const tpl = (state.mealTemplates || []).find(t => t.id === id);
+            if (!tpl) return;
+            if (!confirm(`Видалити шаблон «${tpl.name}»?`)) return;
+            state.mealTemplates = state.mealTemplates.filter(t => t.id !== id);
+            renderMealTemplates();
+            saveStateToStorage();
+        }
+
+        // ==========================================
+        // ВОДА ТА ВАГА
+        // ==========================================
+        let lastWWDate = null;
+
+        function shortDateLabel(dateStr) {
+            return new Date(dateStr + 'T00:00:00').toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' });
+        }
+
+        function formatLiters(ml) { return parseFloat((ml / 1000).toFixed(2)); }
+
+        // Орієнтир ~30 мл на кг ваги, з округленням до 50 мл
+        function getWaterGoalMl() {
+            return Math.round(((state.profile.weight || 70) * 30) / 50) * 50;
+        }
+
+        function getWeightOnOrBefore(dateStr) {
+            const dates = Object.keys(state.weights || {}).filter(d => d <= dateStr).sort();
+            return dates.length ? state.weights[dates[dates.length - 1]] : null;
+        }
+
+        function renderWaterWeight(forceInputReset) {
+            const date = state.selectedDate;
+            const dateChanged = date !== lastWWDate;
+            lastWWDate = date;
+
+            const label = document.getElementById('ww-date-label');
+            if (!label) return;
+            label.textContent = date === getTodayDateString() ? 'Сьогодні' : shortDateLabel(date);
+
+            const ml = (state.water && state.water[date]) || 0;
+            const goal = getWaterGoalMl();
+            const pct = goal > 0 ? Math.round((ml / goal) * 100) : 0;
+            document.getElementById('water-value').textContent = formatLiters(ml);
+            document.getElementById('water-goal').textContent = formatLiters(goal);
+            document.getElementById('water-pct').textContent = `${pct}%`;
+            document.getElementById('water-bar').style.width = `${Math.min(100, pct)}%`;
+
+            const input = document.getElementById('weight-input');
+            if (input && (forceInputReset || dateChanged)) {
+                const known = (state.weights && state.weights[date]) ?? getWeightOnOrBefore(date) ?? state.profile.weight;
+                input.value = known ? Number(known).toFixed(1) : '';
+            }
+            document.getElementById('weight-delete-btn').classList.toggle('hidden', !(state.weights && state.weights[date] != null));
+            renderWeightChart();
+        }
+
+        function addWater(delta) {
+            const date = state.selectedDate;
+            const before = (state.water && state.water[date]) || 0;
+            const after = Math.max(0, Math.min(10000, before + delta));
+            if (!state.water) state.water = {};
+            if (after === 0) delete state.water[date]; else state.water[date] = after;
+            renderWaterWeight(false);
+            saveStateToStorage();
+            const goal = getWaterGoalMl();
+            if (delta > 0 && before < goal && after >= goal) showToast('Норму води виконано!');
+        }
+
+        function saveWeightEntry(e) {
+            e.preventDefault();
+            const raw = String(document.getElementById('weight-input').value).replace(',', '.');
+            const val = Math.round(parseFloat(raw) * 10) / 10;
+            if (!isFinite(val) || val < 25 || val > 300) {
+                showToast('Введіть вагу від 25 до 300 кг');
+                return;
+            }
+            if (!state.weights) state.weights = {};
+            state.weights[state.selectedDate] = val;
+
+            let msg = 'Вагу записано';
+            if (state.selectedDate === getTodayDateString()) {
+                state.profile.weight = val;
+                syncUIFromProfile();
+                recalculateAll();   // оновить норму калорій під нову вагу
+                msg = 'Вагу записано, параметри та норму калорій оновлено';
+            }
+            document.getElementById('weight-input').value = val.toFixed(1);
+            renderWaterWeight(false);
+            saveStateToStorage();
+            showToast(msg);
+        }
+
+        function deleteWeightEntry() {
+            if (!state.weights || state.weights[state.selectedDate] == null) return;
+            delete state.weights[state.selectedDate];
+            renderWaterWeight(true);
+            saveStateToStorage();
+            showToast('Запис ваги видалено');
+        }
+
+        function renderWeightChart() {
+            const box = document.getElementById('weight-chart');
+            const deltaEl = document.getElementById('weight-delta');
+            const readout = document.getElementById('weight-readout');
+            if (!box) return;
+
+            const entries = Object.entries(state.weights || {})
+                .filter(([, v]) => isFinite(v))
+                .sort((a, b) => a[0].localeCompare(b[0]))
+                .slice(-30);
+
+            if (entries.length === 0) {
+                box.innerHTML = '<div class="text-xs text-slate-400 py-3">Запишіть вагу, і тут з’явиться графік.</div>';
+                deltaEl.textContent = '';
+                readout.textContent = '';
+                return;
+            }
+            if (entries.length === 1) {
+                const [d, v] = entries[0];
+                box.innerHTML = `<div class="text-xs text-slate-500 py-2">Перший запис: <strong class="text-slate-800">${v.toFixed(1)} кг</strong> (${shortDateLabel(d)}). Додайте ще один запис, і з’явиться графік.</div>`;
+                deltaEl.textContent = '';
+                readout.textContent = '';
+                return;
+            }
+
+            const W = 320, H = 140, L = 36, R = 12, T = 12, B = 26;
+            const vals = entries.map(e => e[1]);
+            const dMin = Math.min(...vals), dMax = Math.max(...vals);
+            let lo = dMin, hi = dMax;
+            if (hi - lo < 1) { const mid = (hi + lo) / 2; lo = mid - 0.5; hi = mid + 0.5; }
+            const pad = (hi - lo) * 0.15;
+            lo -= pad; hi += pad;
+
+            const xs = i => L + (i * (W - L - R)) / (entries.length - 1);
+            const ys = v => T + ((hi - v) / (hi - lo)) * (H - T - B);
+
+            const ticks = [dMax, (dMax + dMin) / 2, dMin];
+            const grid = ticks.map(v => `
+                <line x1="${L}" y1="${ys(v).toFixed(1)}" x2="${W - R}" y2="${ys(v).toFixed(1)}" stroke="#e2e8f0" stroke-width="1"/>
+                <text x="${L - 6}" y="${(ys(v) + 3.5).toFixed(1)}" text-anchor="end" font-size="10" fill="#64748b">${v.toFixed(1)}</text>`).join('');
+
+            const points = entries.map((e, i) => `${xs(i).toFixed(1)},${ys(e[1]).toFixed(1)}`).join(' ');
+            const dots = entries.map((e, i) => `
+                <circle cx="${xs(i).toFixed(1)}" cy="${ys(e[1]).toFixed(1)}" r="4" fill="#059669" stroke="#ffffff" stroke-width="2"/>`).join('');
+            const hits = entries.map((e, i) => `
+                <circle data-i="${i}" cx="${xs(i).toFixed(1)}" cy="${ys(e[1]).toFixed(1)}" r="14" fill="transparent" style="cursor:pointer"/>`).join('');
+
+            const first = entries[0], last = entries[entries.length - 1];
+            box.innerHTML = `
+                <svg viewBox="0 0 ${W} ${H}" class="w-full h-auto" role="img" aria-label="Графік ваги: ${first[1].toFixed(1)} кг (${shortDateLabel(first[0])}) → ${last[1].toFixed(1)} кг (${shortDateLabel(last[0])})">
+                    ${grid}
+                    <polyline points="${points}" fill="none" stroke="#059669" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+                    ${dots}
+                    <text x="${L}" y="${H - 6}" text-anchor="start" font-size="10" fill="#64748b">${shortDateLabel(first[0])}</text>
+                    <text x="${W - R}" y="${H - 6}" text-anchor="end" font-size="10" fill="#64748b">${shortDateLabel(last[0])}</text>
+                    ${hits}
+                </svg>`;
+
+            const show = i => { readout.textContent = `${shortDateLabel(entries[i][0])}: ${entries[i][1].toFixed(1)} кг`; };
+            show(entries.length - 1);
+            box.querySelectorAll('[data-i]').forEach(c => {
+                const i = parseInt(c.getAttribute('data-i'), 10);
+                c.addEventListener('mouseenter', () => show(i));
+                c.addEventListener('click', () => show(i));
+                c.addEventListener('touchstart', () => show(i), { passive: true });
+            });
+
+            const diff = last[1] - first[1];
+            deltaEl.textContent = Math.abs(diff) < 0.05
+                ? `без змін з ${shortDateLabel(first[0])}`
+                : `${diff > 0 ? '+' : '−'}${Math.abs(diff).toFixed(1)} кг з ${shortDateLabel(first[0])}`;
         }
 
         // ==========================================
