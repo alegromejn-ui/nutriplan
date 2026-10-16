@@ -1612,8 +1612,8 @@
         }
         function hideAIError() { document.getElementById('ai-error-box').classList.add('hidden'); }
 
-        // Основна модель — стабільний псевдонім; якщо недоступна (404) — запасна
-        const GEMINI_MODELS = ['gemini-flash-latest', 'gemini-2.5-flash'];
+        // Поточна модель Gemini; якщо недоступна (404) — пробуємо наступну зі списку
+        const GEMINI_MODELS = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 
         function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
@@ -1667,7 +1667,7 @@
             if (err && err.code === 'NO_KEY') return 'Не вказано ключ Gemini API. Натисніть «Налаштувати API» і вставте свій ключ із Google AI Studio.';
             if (err && err.code === 'NETWORK') return 'Немає з\u2019єднання з інтернетом. Перевірте мережу й спробуйте ще раз.';
             if (status === 400 || status === 401 || status === 403) return `Gemini відхилив запит (код ${status}). Перевірте, чи ключ скопійовано повністю і чи він активний.`;
-            if (status === 404) return 'Модель Gemini недоступна. Додаток потрібно оновити — напишіть про це розробнику.';
+            if (status === 404) return 'Жодна з моделей Gemini, зазначених у коді, недоступна для вашого ключа. Потрібно оновити назви моделей у файлі index.html (список GEMINI_MODELS).';
             if (status === 429) return 'Перевищено ліміт запитів Gemini. Зачекайте хвилину і спробуйте ще раз.';
             if (status >= 500) return 'Сервіс Gemini тимчасово недоступний. Спробуйте пізніше.';
             return 'Не вдалося розпізнати страву. Спробуйте інше фото або додайте уточнення в текстове поле.';
