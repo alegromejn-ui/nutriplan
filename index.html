@@ -12,9 +12,9 @@
     <meta name="apple-mobile-web-app-title" content="NutriPlan PRO">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="application-name" content="NutriPlan PRO">
-    <link id="apple-touch-icon-link" rel="apple-touch-icon" href="">
-    <link id="favicon-link" rel="icon" type="image/png" href="">
-    <link id="manifest-link" rel="manifest" href="">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <link rel="manifest" href="manifest.json">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -170,6 +170,17 @@
 
     <!-- Основний контент -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <!-- Нагадування про бекап -->
+        <div id="backup-reminder" class="hidden mb-5 p-3.5 rounded-xl bg-amber-50 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div class="text-xs text-amber-900 leading-relaxed">
+                <strong>Час зробити бекап.</strong> Історія зберігається лише в браузері цього пристрою. Збережіть копію у файл, щоб не втратити дані.
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <button type="button" onclick="exportUserData()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition-colors">Зберегти бекап</button>
+                <button type="button" onclick="snoozeBackupReminder()" class="text-amber-800 hover:bg-amber-100 font-semibold text-xs px-3 py-2 rounded-xl transition-colors">Пізніше</button>
+            </div>
+        </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
             
             <!-- ЛІВА КОЛОНКА: Параметри, Норми, Макронутрієнти (5 колонок) -->
@@ -428,7 +439,7 @@
                         </div>
 
                         <!-- Перемикач днів та копіювання -->
-                        <div class="flex items-center gap-1.5 self-end sm:self-auto">
+                        <div class="flex flex-wrap items-center justify-end gap-1.5 self-end sm:self-auto">
                             <button onclick="changeDay(-1)" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors" title="Попередній день">
                                 <i data-lucide="ChevronLeft" class="w-4 h-4"></i>
                             </button>
@@ -442,7 +453,7 @@
                             <button onclick="document.getElementById('date-picker-input').click()" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors" title="Обрати дату у календарі">
                                 <i data-lucide="CalendarDays" class="w-4 h-4 text-emerald-600"></i>
                             </button>
-                            <button onclick="copyYesterdayMealPlan()" class="hidden sm:inline-flex items-center gap-1 px-2.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-semibold transition-colors border border-emerald-200" title="Скопіювати раціон із вчора">
+                            <button onclick="copyYesterdayMealPlan()" class="inline-flex items-center gap-1 px-2.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-semibold transition-colors border border-emerald-200" title="Скопіювати раціон із вчора">
                                 <i data-lucide="Copy" class="w-3.5 h-3.5"></i>
                                 <span>Копіювати з вчора</span>
                             </button>
@@ -863,21 +874,11 @@
                 <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80">
                     <div class="font-bold text-slate-900 flex items-center gap-1.5 mb-1.5">
                         <span class="w-5 h-5 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center font-bold">1</span>
-                        <span>Опублікуйте на Netlify Drop (за 15 секунд)</span>
+                        <span>Відкрийте цю сторінку на телефоні</span>
                     </div>
-                    <p class="text-xs text-slate-600 leading-relaxed mb-3">
-                        <strong>Важливо:</strong> Netlify Drop приймає саме <strong>ZIP-архів</strong> або <strong>папку</strong> (один голий файл видасть помилку <em>Not Found</em>). Натисніть зелену кнопку нижче, щоб завантажити готовий ZIP-архів, і просто перетягніть його у вікно <a href="https://app.netlify.com/drop" target="_blank" rel="noopener noreferrer" class="text-emerald-600 font-bold underline">app.netlify.com/drop</a>!
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Використовуйте <strong>Safari</strong> на iPhone або <strong>Chrome</strong> на Android і додайте сторінку на головний екран за інструкцією нижче. Після першого відкриття з інтернетом додаток запускатиметься і без мережі (крім AI-сканера).
                     </p>
-                    <div class="space-y-2">
-                        <button type="button" onclick="downloadNetlifyZip()" class="w-full flex items-center justify-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs py-3 px-4 rounded-xl shadow-sm transition-colors">
-                            <i data-lucide="FolderArchive" class="w-4 h-4"></i>
-                            <span>Завантажити готовий ZIP для Netlify (nutriplan-app.zip)</span>
-                        </button>
-                        <button type="button" onclick="downloadStandaloneAppFile()" class="w-full flex items-center justify-center space-x-2 bg-white hover:bg-slate-100 text-slate-700 font-semibold text-xs py-2 px-4 rounded-xl border border-slate-200 transition-colors">
-                            <i data-lucide="FileCode" class="w-4 h-4 text-slate-500"></i>
-                            <span>Завантажити чистий index.html (для папки)</span>
-                        </button>
-                    </div>
                 </div>
 
                 <div class="p-3.5 rounded-xl bg-blue-50/60 border border-blue-200/70">
@@ -947,7 +948,7 @@
                     </button>
                 </div>
                 <div class="flex items-center justify-between gap-2">
-                    <span id="api-key-status-text" class="text-[11px] font-medium text-emerald-700">Статус: Вбудоване середовище</span>
+                    <span id="api-key-status-text" class="text-[11px] font-medium text-emerald-700">Статус: ключ не вказано</span>
                     <button type="button" onclick="saveUserApiKey()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition-colors shadow-2xs">
                         Зберегти ключ
                     </button>
@@ -1080,7 +1081,8 @@
             macrosPct: { p: 30, f: 30, c: 40 },
             selectedDate: getTodayDateString(), // формату YYYY-MM-DD
             history: {}, // { '2026-10-15': { breakfast: [], lunch: [], dinner: [], snack: [] } }
-            customFoods: []
+            customFoods: [],
+            recentFoodIds: []
         };
 
         let aiScannerState = {
@@ -1099,8 +1101,10 @@
             if (banner) banner.classList.remove('hidden');
         });
 
+        let lastKnownToday = getTodayDateString();
+
         window.addEventListener('DOMContentLoaded', () => {
-            setupSingleFilePWA();
+            registerServiceWorker();
             loadStateFromStorage();
             syncUIFromProfile();
             updateApiKeyStatusUI();
@@ -1108,6 +1112,25 @@
             renderDateHeader();
             renderFoodDatabase();
             lucide.createIcons();
+            requestPersistentStorage();
+            checkBackupReminder();
+        });
+
+        // Коли користувач повертається в додаток (наприклад, наступного дня) — оновлюємо «Сьогодні»
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState !== 'visible') return;
+            const today = getTodayDateString();
+            if (today !== lastKnownToday) {
+                const wasOnToday = state.selectedDate === lastKnownToday;
+                lastKnownToday = today;
+                if (wasOnToday) {
+                    state.selectedDate = today;
+                    renderDateHeader();
+                    renderMealPlanUI(true);
+                    saveStateToStorage();
+                }
+            }
+            checkBackupReminder();
         });
 
         function getTodayDateString() {
@@ -1118,41 +1141,19 @@
             return `${year}-${month}-${day}`;
         }
 
-        function setupSingleFilePWA() {
+        function registerServiceWorker() {
+            if (!('serviceWorker' in navigator) || !/^https?:$/.test(location.protocol)) return;
+            navigator.serviceWorker.register('sw.js').catch(() => {});
+        }
+
+        function requestPersistentStorage() {
             try {
-                const canvas = document.createElement('canvas');
-                canvas.width = 192; canvas.height = 192;
-                const ctx = canvas.getContext('2d');
-                const grad = ctx.createLinearGradient(0, 0, 192, 192);
-                grad.addColorStop(0, '#059669'); grad.addColorStop(1, '#0f172a');
-                ctx.fillStyle = grad;
-                ctx.beginPath(); ctx.roundRect(0, 0, 192, 192, 42); ctx.fill();
-
-                ctx.lineWidth = 14; ctx.strokeStyle = '#34d399';
-                ctx.beginPath(); ctx.arc(96, 96, 62, -Math.PI / 2, Math.PI * 0.85); ctx.stroke();
-                ctx.strokeStyle = '#f59e0b';
-                ctx.beginPath(); ctx.arc(96, 96, 62, Math.PI * 0.85, Math.PI * 1.48); ctx.stroke();
-
-                ctx.fillStyle = '#ffffff';
-                ctx.font = '900 54px Inter, sans-serif';
-                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                ctx.fillText('NP', 96, 100);
-
-                const iconUrl = canvas.toDataURL('image/png');
-                document.getElementById('apple-touch-icon-link').href = iconUrl;
-                document.getElementById('favicon-link').href = iconUrl;
-
-                const manifestObj = {
-                    name: "NutriPlan PRO — Щоденник харчування та КБЖВ",
-                    short_name: "NutriPlan PRO",
-                    start_url: ".",
-                    display: "standalone",
-                    background_color: "#f8fafc",
-                    theme_color: "#059669",
-                    icons: [{ src: iconUrl, sizes: "192x192", type: "image/png" }]
-                };
-                document.getElementById('manifest-link').href = URL.createObjectURL(new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' }));
+                if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
             } catch (e) {}
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
         }
 
         function triggerNativeInstall() {
@@ -1167,142 +1168,6 @@
         function toggleInstallModal(show) {
             document.getElementById('modal-install-guide').classList.toggle('hidden', !show);
             lucide.createIcons();
-        }
-
-        function getCleanStandaloneHTML() {
-            const clone = document.documentElement.cloneNode(true);
-            
-            // 1. Видаляємо всі службові скрипти та стилі середовища Gemini Canvas
-            clone.querySelectorAll('script[data-bard-client-injected], script[ws-interception-config]').forEach(el => el.remove());
-            const styles = clone.querySelectorAll('head style');
-            styles.forEach((st, idx) => {
-                if (idx > 0 || st.textContent.includes('--tw-border-spacing-x')) st.remove();
-            });
-
-            // 2. Закриваємо всі модальні вікна у збереженій копії
-            ['modal-install-guide', 'modal-settings', 'modal-stats', 'modal-custom-food'].forEach(id => {
-                const modal = clone.querySelector('#' + id);
-                if (modal) modal.classList.add('hidden');
-            });
-
-            // 3. Очищуємо тимчасові blob-посилання, щоб вони згенерувалися заново на пристрої
-            ['apple-touch-icon-link', 'favicon-link', 'manifest-link'].forEach(id => {
-                const link = clone.querySelector('#' + id);
-                if (link) link.setAttribute('href', '');
-            });
-
-            // 4. Замінюємо розгорнуті SVG назад на теги <i data-lucide="..."> для чистоти коду
-            clone.querySelectorAll('svg[data-lucide]').forEach(svg => {
-                const iconName = svg.getAttribute('data-lucide');
-                const i = document.createElement('i');
-                i.setAttribute('data-lucide', iconName);
-                const cleanClass = (svg.getAttribute('class') || '')
-                    .replace(/lucide\s+lucide-[a-zA-Z0-9-]+\s*/g, '')
-                    .trim();
-                if (cleanClass) i.setAttribute('class', cleanClass);
-                svg.replaceWith(i);
-            });
-
-            return '<!DOCTYPE html>\n' + clone.outerHTML;
-        }
-
-        function downloadStandaloneAppFile() {
-            const htmlContent = getCleanStandaloneHTML();
-            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'index.html';
-            a.click();
-            URL.revokeObjectURL(url);
-            showToast('Чистий файл index.html завантажено!');
-        }
-
-        // Генератор ZIP-архіву з файлом index.html всередині спеціально для Netlify Drop
-        function createSingleFileZipBlob(filename, contentString) {
-            const encoder = new TextEncoder();
-            const data = encoder.encode(contentString);
-            const nameBytes = encoder.encode(filename);
-
-            // Обчислення CRC32
-            let crc = 0 ^ (-1);
-            for (let i = 0; i < data.length; i++) {
-                let c = (crc ^ data[i]) & 0xFF;
-                for (let k = 0; k < 8; k++) {
-                    c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
-                }
-                crc = (crc >>> 8) ^ c;
-            }
-            crc = (crc ^ (-1)) >>> 0;
-
-            const localHeaderLen = 30 + nameBytes.length;
-            const centralHeaderLen = 46 + nameBytes.length;
-            const totalSize = localHeaderLen + data.length + centralHeaderLen + 22;
-
-            const buf = new ArrayBuffer(totalSize);
-            const view = new DataView(buf);
-            const bytes = new Uint8Array(buf);
-
-            // Local File Header
-            view.setUint32(0, 0x04034b50, true);
-            view.setUint16(4, 20, true);
-            view.setUint16(6, 0x0800, true); // UTF-8
-            view.setUint16(8, 0, true);      // Без стиснення (Store)
-            view.setUint16(10, 0, true);
-            view.setUint16(12, 0, true);
-            view.setUint32(14, crc, true);
-            view.setUint32(18, data.length, true);
-            view.setUint32(22, data.length, true);
-            view.setUint16(26, nameBytes.length, true);
-            view.setUint16(28, 0, true);
-            bytes.set(nameBytes, 30);
-            bytes.set(data, localHeaderLen);
-
-            // Central Directory File Header
-            const cdOffset = localHeaderLen + data.length;
-            view.setUint32(cdOffset, 0x02014b50, true);
-            view.setUint16(cdOffset + 4, 20, true);
-            view.setUint16(cdOffset + 6, 20, true);
-            view.setUint16(cdOffset + 8, 0x0800, true);
-            view.setUint16(cdOffset + 10, 0, true);
-            view.setUint16(cdOffset + 12, 0, true);
-            view.setUint16(cdOffset + 14, 0, true);
-            view.setUint32(cdOffset + 16, crc, true);
-            view.setUint32(cdOffset + 20, data.length, true);
-            view.setUint32(cdOffset + 24, data.length, true);
-            view.setUint16(cdOffset + 28, nameBytes.length, true);
-            view.setUint16(cdOffset + 30, 0, true);
-            view.setUint16(cdOffset + 32, 0, true);
-            view.setUint16(cdOffset + 34, 0, true);
-            view.setUint16(cdOffset + 36, 0, true);
-            view.setUint32(cdOffset + 38, 0, true);
-            view.setUint32(cdOffset + 42, 0, true);
-            bytes.set(nameBytes, cdOffset + 46);
-
-            // End of Central Directory Record
-            const eocdOffset = cdOffset + centralHeaderLen;
-            view.setUint32(eocdOffset, 0x06054b50, true);
-            view.setUint16(eocdOffset + 4, 0, true);
-            view.setUint16(eocdOffset + 6, 0, true);
-            view.setUint16(eocdOffset + 8, 1, true);
-            view.setUint16(eocdOffset + 10, 1, true);
-            view.setUint32(eocdOffset + 12, centralHeaderLen, true);
-            view.setUint32(eocdOffset + 16, cdOffset, true);
-            view.setUint16(eocdOffset + 20, 0, true);
-
-            return new Blob([buf], { type: 'application/zip' });
-        }
-
-        function downloadNetlifyZip() {
-            const cleanHtml = getCleanStandaloneHTML();
-            const zipBlob = createSingleFileZipBlob('index.html', cleanHtml);
-            const url = URL.createObjectURL(zipBlob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'nutriplan-app.zip';
-            a.click();
-            URL.revokeObjectURL(url);
-            showToast('Готовий ZIP-архів для Netlify завантажено!');
         }
 
         function toggleSettingsModal(show) {
@@ -1343,7 +1208,7 @@
                 st.textContent = 'Статус: Підключено власний ключ Gemini API';
                 st.className = 'text-[11px] font-bold text-emerald-700';
             } else {
-                st.textContent = 'Статус: Вбудоване середовище';
+                st.textContent = 'Статус: ключ не вказано';
                 st.className = 'text-[11px] font-medium text-slate-600';
             }
         }
@@ -1356,7 +1221,37 @@
             a.download = `nutriplan-history-backup-${getTodayDateString()}.json`;
             a.click();
             URL.revokeObjectURL(url);
+            try { localStorage.setItem('nutriplan_last_backup', String(Date.now())); } catch (e) {}
+            checkBackupReminder();
             showToast('Історію раціонів експортовано');
+        }
+
+        // Нагадування про бекап раз на 7 днів
+        const BACKUP_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
+        const BACKUP_SNOOZE_MS = 3 * 24 * 60 * 60 * 1000;
+
+        function checkBackupReminder() {
+            const box = document.getElementById('backup-reminder');
+            if (!box) return;
+            try {
+                const now = Date.now();
+                let firstUse = parseInt(localStorage.getItem('nutriplan_first_use') || '0', 10);
+                if (!firstUse) {
+                    firstUse = now;
+                    localStorage.setItem('nutriplan_first_use', String(firstUse));
+                }
+                const lastBackup = parseInt(localStorage.getItem('nutriplan_last_backup') || '0', 10) || firstUse;
+                const snoozeUntil = parseInt(localStorage.getItem('nutriplan_backup_snooze_until') || '0', 10);
+                const hasData = Object.values(state.history || {}).some(day =>
+                    Object.values(day).some(list => Array.isArray(list) && list.length > 0));
+                const due = hasData && (now - lastBackup > BACKUP_INTERVAL_MS) && now > snoozeUntil;
+                box.classList.toggle('hidden', !due);
+            } catch (e) {}
+        }
+
+        function snoozeBackupReminder() {
+            try { localStorage.setItem('nutriplan_backup_snooze_until', String(Date.now() + BACKUP_SNOOZE_MS)); } catch (e) {}
+            checkBackupReminder();
         }
 
         function importUserData(e) {
@@ -1368,6 +1263,9 @@
                     const parsed = JSON.parse(evt.target.result);
                     if (parsed && parsed.history) {
                         state = { ...state, ...parsed };
+                        state.selectedDate = getTodayDateString();
+                        state.customFoods = parsed.customFoods || [];
+                        state.recentFoodIds = parsed.recentFoodIds || [];
                         syncUIFromProfile();
                         recalculateAll();
                         renderDateHeader();
@@ -1400,7 +1298,10 @@
                         ...state,
                         ...parsed,
                         profile: { ...state.profile, ...(parsed.profile || {}) },
-                        history: parsed.history || {}
+                        history: parsed.history || {},
+                        customFoods: parsed.customFoods || [],
+                        recentFoodIds: parsed.recentFoodIds || [],
+                        selectedDate: getTodayDateString()
                     };
                 } else {
                     // Стартовий день для нових користувачів
@@ -1711,24 +1612,65 @@
         }
         function hideAIError() { document.getElementById('ai-error-box').classList.add('hidden'); }
 
+        // Основна модель — стабільний псевдонім; якщо недоступна (404) — запасна
+        const GEMINI_MODELS = ['gemini-flash-latest', 'gemini-2.5-flash'];
+
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
         async function fetchGeminiWithBackoff(payload) {
-            const apiKey = (localStorage.getItem('nutriplan_user_gemini_key') || '').trim() || "";
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+            const apiKey = (localStorage.getItem('nutriplan_user_gemini_key') || '').trim();
+            if (!apiKey) {
+                const e = new Error('NO_KEY');
+                e.code = 'NO_KEY';
+                throw e;
+            }
             const delays = [1000, 2000, 4000];
-            for (let attempt = 0; attempt <= delays.length; attempt++) {
-                try {
-                    const res = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    return await res.json();
-                } catch (err) {
-                    if (attempt === delays.length) throw err;
-                    await new Promise(r => setTimeout(r, delays[attempt]));
+            let lastErr = null;
+
+            for (const model of GEMINI_MODELS) {
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+                for (let attempt = 0; attempt <= delays.length; attempt++) {
+                    let res;
+                    try {
+                        res = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                    } catch (netErr) {
+                        lastErr = new Error('NETWORK');
+                        lastErr.code = 'NETWORK';
+                        if (attempt === delays.length) break;
+                        await sleep(delays[attempt]);
+                        continue;
+                    }
+                    if (res.ok) return await res.json();
+
+                    lastErr = new Error('HTTP ' + res.status);
+                    lastErr.code = 'HTTP_' + res.status;
+                    lastErr.status = res.status;
+
+                    if (res.status === 404) break;                       // модель недоступна — пробуємо наступну
+                    if (res.status === 429 || res.status >= 500) {       // тимчасова проблема — повторюємо
+                        if (attempt === delays.length) break;
+                        await sleep(delays[attempt]);
+                        continue;
+                    }
+                    throw lastErr;                                       // 400/401/403 — повторювати марно
                 }
             }
+            throw lastErr || new Error('UNKNOWN');
+        }
+
+        function describeGeminiError(err) {
+            const status = err && err.status;
+            if (err && err.code === 'NO_KEY') return 'Не вказано ключ Gemini API. Натисніть «Налаштувати API» і вставте свій ключ із Google AI Studio.';
+            if (err && err.code === 'NETWORK') return 'Немає з\u2019єднання з інтернетом. Перевірте мережу й спробуйте ще раз.';
+            if (status === 400 || status === 401 || status === 403) return `Gemini відхилив запит (код ${status}). Перевірте, чи ключ скопійовано повністю і чи він активний.`;
+            if (status === 404) return 'Модель Gemini недоступна. Додаток потрібно оновити — напишіть про це розробнику.';
+            if (status === 429) return 'Перевищено ліміт запитів Gemini. Зачекайте хвилину і спробуйте ще раз.';
+            if (status >= 500) return 'Сервіс Gemini тимчасово недоступний. Спробуйте пізніше.';
+            return 'Не вдалося розпізнати страву. Спробуйте інше фото або додайте уточнення в текстове поле.';
         }
 
         async function analyzeFoodWithGemini() {
@@ -1777,7 +1719,7 @@
                 const parsed = JSON.parse(res?.candidates?.[0]?.content?.parts?.[0]?.text);
                 displayAIDetectedPlate(parsed.dishTitle, parsed.summary, parsed.items || []);
             } catch (err) {
-                showAIError('Помилка розпізнавання. Якщо ви окремо на телефоні — введіть власний API ключ у налаштуваннях.');
+                showAIError(describeGeminiError(err));
             } finally {
                 document.getElementById('btn-analyze-photo').disabled = false;
                 document.getElementById('btn-analyze-text').textContent = 'Розпізнати страву та порахувати КБЖВ';
@@ -1804,7 +1746,7 @@
                 cPer100: Math.round((it.cPer100 || 0) * 10) / 10
             }));
 
-            document.getElementById('ai-dish-title').innerHTML = `<i data-lucide="Sparkles" class="w-4 h-4 text-emerald-400"></i><span>${title}</span>`;
+            document.getElementById('ai-dish-title').innerHTML = `<i data-lucide="Sparkles" class="w-4 h-4 text-emerald-400"></i><span>${escapeHtml(title)}</span>`;
             document.getElementById('ai-dish-summary').textContent = summary;
             document.getElementById('ai-results-container').classList.remove('hidden');
             renderAIDetectedItemsList();
@@ -1822,7 +1764,7 @@
                 return `
                     <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-white/10 border border-white/15">
                         <div class="min-w-0 flex-1">
-                            <div class="font-bold text-xs text-white truncate">${item.name}</div>
+                            <div class="font-bold text-xs text-white truncate">${escapeHtml(item.name)}</div>
                             <div class="text-[10px] text-emerald-300">${Math.round(item.kcalPer100 * r)} ккал (Б:${(item.pPer100*r).toFixed(1)} Ж:${(item.fPer100*r).toFixed(1)} В:${(item.cPer100*r).toFixed(1)})</div>
                         </div>
                         <div class="flex items-center space-x-1">
@@ -1890,6 +1832,7 @@
             const food = getAllFoods().find(f => f.id === foodId);
             if (!food) return;
             const dayMeals = getActiveDayMeals();
+            rememberRecentFood(food.id);
             const existing = dayMeals[activeMealTab].find(i => i.foodId === foodId);
             if (existing) {
                 existing.grams += food.defaultGrams || 100;
@@ -1902,6 +1845,12 @@
             renderMealPlanUI(true);
             saveStateToStorage();
             showToast(`Додано у ${MEAL_NAMES[activeMealTab]}`);
+        }
+
+        function rememberRecentFood(foodId) {
+            const list = (state.recentFoodIds || []).filter(id => id !== foodId);
+            list.unshift(foodId);
+            state.recentFoodIds = list.slice(0, 8);
         }
 
         function updateMealItemGrams(instanceId, val) {
@@ -2032,7 +1981,7 @@
                 return `
                     <div class="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200/80">
                         <div class="min-w-0 flex-1">
-                            <div class="font-bold text-xs sm:text-sm text-slate-800 truncate">${food.name}</div>
+                            <div class="font-bold text-xs sm:text-sm text-slate-800 truncate">${escapeHtml(food.name)}</div>
                             <div id="stats-${item.instanceId}" class="text-xs mt-0.5">
                                 <span class="font-bold text-slate-800">${Math.round(food.kcal * r)} ккал</span>
                                 <span class="text-blue-600">Б:${(food.p * r).toFixed(1)}</span>
@@ -2081,17 +2030,28 @@
                 return;
             }
 
-            listEl.innerHTML = filtered.map(food => `
+            const foodRowHtml = food => `
                 <div class="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 hover:border-emerald-300">
                     <div class="min-w-0 pr-2">
-                        <div class="font-bold text-xs sm:text-sm text-slate-800 truncate">${food.name}</div>
+                        <div class="font-bold text-xs sm:text-sm text-slate-800 truncate">${escapeHtml(food.name)}</div>
                         <div class="text-[11px] text-slate-500">${food.kcal} ккал/100г (Б:${food.p} Ж:${food.f} В:${food.c})</div>
                     </div>
                     <button onclick="addFoodToActiveMeal('${food.id}')" class="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white font-bold text-xs px-2.5 py-1.5 rounded-lg border border-emerald-200 transition-all">
                         <i data-lucide="Plus" class="w-3.5 h-3.5"></i><span>+${food.defaultGrams || 100}г</span>
                     </button>
                 </div>
-            `).join('');
+            `;
+
+            let recentsHtml = '';
+            if (!q && activeCategory === 'all') {
+                const recentFoods = (state.recentFoodIds || []).map(id => all.find(f => f.id === id)).filter(Boolean);
+                if (recentFoods.length > 0) {
+                    recentsHtml = '<div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-1 pt-1">Нещодавні</div>'
+                        + recentFoods.map(foodRowHtml).join('')
+                        + '<div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-1 pt-3">Усі продукти</div>';
+                }
+            }
+            listEl.innerHTML = recentsHtml + filtered.map(foodRowHtml).join('');
             lucide.createIcons();
         }
 
