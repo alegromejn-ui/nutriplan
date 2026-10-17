@@ -170,7 +170,7 @@
         <div class="border-t border-slate-100">
             <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-1.5 flex items-center gap-3" aria-live="off">
                 <div class="text-[11px] sm:text-xs font-bold whitespace-nowrap">
-                    <span id="mini-kcal" class="text-slate-900">0</span><span class="text-slate-400 font-semibold"> / <span id="mini-target">0</span> ккал</span><span id="mini-over" class="hidden text-rose-700 ml-1"></span>
+                    <span id="mini-kcal" class="text-slate-900">0</span><span class="text-slate-500 font-semibold"> / <span id="mini-target">0</span> ккал</span><span id="mini-over" class="hidden text-rose-700 ml-1"></span>
                 </div>
                 <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                     <div id="mini-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-300" style="width: 0%"></div>
@@ -200,10 +200,10 @@
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
             
             <!-- ЛІВА КОЛОНКА: Параметри, Норми, Макронутрієнти (5 колонок) -->
-            <div class="lg:col-span-5 space-y-6">
+            <div class="lg:col-span-5 space-y-6 order-2 lg:order-1">
                 
                 <!-- Картка 1: Параметри тіла -->
-                <section class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-5 sm:p-6">
+                <section id="params-section" class="scroll-mt-28 bg-white rounded-2xl shadow-xs border border-slate-200/80 p-5 sm:p-6">
                     <div class="flex items-center justify-between mb-5">
                         <div class="flex items-center space-x-2.5">
                             <div class="p-2 bg-slate-100 text-slate-700 rounded-lg">
@@ -285,7 +285,7 @@
                             <span id="modifier-badge" class="font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">-15%</span>
                         </div>
                         <input type="range" id="slider-modifier" min="-30" max="25" step="5" value="-15" oninput="updateModifierFromSlider(this.value)" class="w-full text-emerald-600 bg-slate-200 rounded-lg">
-                        <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+                        <div class="flex justify-between text-[10px] text-slate-500 mt-1">
                             <span>-30% (Сушка)</span>
                             <span>0% (Норма)</span>
                             <span>+25% (Маса)</span>
@@ -439,7 +439,7 @@
             </div>
 
             <!-- ПРАВА КОЛОНКА: Календар, AI-Сканер, Щоденник харчування (7 колонок) -->
-            <div class="lg:col-span-7 space-y-6">
+            <div class="lg:col-span-7 space-y-6 order-1 lg:order-2">
                 
                 <!-- ПАНЕЛЬ КАЛЕНДАРЯ ДАТ (ЩОДЕННИК ІСТОРІЇ) -->
                 <section class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-5">
@@ -483,9 +483,10 @@
                         <div>
                             <h2 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
                                 <i data-lucide="Utensils" class="w-5 h-5 text-emerald-600"></i>
-                                <span>4. Контроль раціону за день</span>
+                                <span>Контроль раціону за день</span>
                             </h2>
                             <p class="text-xs text-slate-500">Заповнення вашої норми КБЖВ у реальному часі</p>
+                            <button type="button" onclick="scrollToParams()" class="lg:hidden mt-1 text-xs font-semibold text-emerald-700 underline underline-offset-2">Змінити норму та параметри</button>
                         </div>
                         <div id="calories-status-badge" class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 self-start sm:self-auto">
                             <i data-lucide="CheckCircle2" class="w-4 h-4"></i>
@@ -499,7 +500,7 @@
                             <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Калорійність раціону</span>
                             <div class="text-sm">
                                 <span id="consumed-kcal" class="font-extrabold text-slate-900 text-base">0</span>
-                                <span class="text-slate-400 font-medium">/</span>
+                                <span class="text-slate-500 font-medium">/</span>
                                 <span id="target-kcal-bar" class="font-semibold text-slate-600">1964 ккал</span>
                                 <span id="consumed-kcal-pct" class="ml-1.5 text-xs font-bold text-emerald-600">(0%)</span>
                             </div>
@@ -512,12 +513,12 @@
                     <!-- Прогрес-бари БЖВ -->
                     <div class="grid grid-cols-3 gap-3 sm:gap-4">
                         <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                            <div class="flex justify-between items-center text-xs mb-1">
+                            <div class="flex flex-wrap justify-between items-baseline gap-x-1 text-xs mb-1">
                                 <span class="font-bold text-blue-600">Білки</span>
-                                <span id="pct-bar-p" class="text-[11px] font-semibold text-slate-400">0%</span>
+                                <span id="pct-bar-p" class="text-[11px] font-semibold text-slate-500">0%</span>
                             </div>
                             <div class="text-xs sm:text-sm font-extrabold text-slate-800 mb-2">
-                                <span id="consumed-p">0</span> <span class="text-slate-400 font-normal">/ <span id="target-p-bar">147</span> г</span>
+                                <span id="consumed-p">0</span> <span class="text-slate-500 font-normal">/ <span id="target-p-bar">147</span> г</span>
                             </div>
                             <div class="w-full h-2 bg-blue-100 rounded-full overflow-hidden">
                                 <div id="bar-p" class="h-full bg-blue-500 rounded-full transition-all duration-300" style="width: 0%"></div>
@@ -525,12 +526,12 @@
                         </div>
 
                         <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                            <div class="flex justify-between items-center text-xs mb-1">
+                            <div class="flex flex-wrap justify-between items-baseline gap-x-1 text-xs mb-1">
                                 <span class="font-bold text-amber-600">Жири</span>
-                                <span id="pct-bar-f" class="text-[11px] font-semibold text-slate-400">0%</span>
+                                <span id="pct-bar-f" class="text-[11px] font-semibold text-slate-500">0%</span>
                             </div>
                             <div class="text-xs sm:text-sm font-extrabold text-slate-800 mb-2">
-                                <span id="consumed-f">0</span> <span class="text-slate-400 font-normal">/ <span id="target-f-bar">65</span> г</span>
+                                <span id="consumed-f">0</span> <span class="text-slate-500 font-normal">/ <span id="target-f-bar">65</span> г</span>
                             </div>
                             <div class="w-full h-2 bg-amber-100 rounded-full overflow-hidden">
                                 <div id="bar-f" class="h-full bg-amber-500 rounded-full transition-all duration-300" style="width: 0%"></div>
@@ -538,12 +539,12 @@
                         </div>
 
                         <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                            <div class="flex justify-between items-center text-xs mb-1">
+                            <div class="flex flex-wrap justify-between items-baseline gap-x-1 text-xs mb-1">
                                 <span class="font-bold text-emerald-600">Вуглеводи</span>
-                                <span id="pct-bar-c" class="text-[11px] font-semibold text-slate-400">0%</span>
+                                <span id="pct-bar-c" class="text-[11px] font-semibold text-slate-500">0%</span>
                             </div>
                             <div class="text-xs sm:text-sm font-extrabold text-slate-800 mb-2">
-                                <span id="consumed-c">0</span> <span class="text-slate-400 font-normal">/ <span id="target-c-bar">196</span> г</span>
+                                <span id="consumed-c">0</span> <span class="text-slate-500 font-normal">/ <span id="target-c-bar">196</span> г</span>
                             </div>
                             <div class="w-full h-2 bg-emerald-100 rounded-full overflow-hidden">
                                 <div id="bar-c" class="h-full bg-emerald-500 rounded-full transition-all duration-300" style="width: 0%"></div>
@@ -552,52 +553,57 @@
                     </div>
                 </section>
 
-                <!-- ВОДА ТА ВАГА -->
-                <section id="water-weight-section" class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-5 sm:p-6">
-                    <div class="mb-4">
-                        <h2 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
-                            <i data-lucide="Droplets" class="w-5 h-5 text-sky-600"></i>
-                            <span>Вода та вага</span>
-                        </h2>
-                        <p class="text-xs text-slate-500">Дані за вибрану дату: <strong id="ww-date-label" class="text-slate-700">Сьогодні</strong></p>
+                <!-- Вкладки прийомів їжі -->
+                <section class="bg-white rounded-2xl shadow-xs border border-slate-200/80 overflow-hidden">
+                    <div class="grid grid-cols-4 border-b border-slate-200 bg-slate-50/60 p-1.5 gap-1.5">
+                        <button onclick="selectMealTab('breakfast')" id="tab-breakfast" class="meal-tab flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 rounded-xl font-bold text-xs sm:text-sm transition-all">
+                            <i data-lucide="Coffee" class="w-4 h-4"></i>
+                            <span>Сніданок</span>
+                            <span id="badge-breakfast" class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-700">0</span>
+                        </button>
+                        <button onclick="selectMealTab('lunch')" id="tab-lunch" class="meal-tab flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 rounded-xl font-bold text-xs sm:text-sm transition-all">
+                            <i data-lucide="Soup" class="w-4 h-4"></i>
+                            <span>Обід</span>
+                            <span id="badge-lunch" class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-700">0</span>
+                        </button>
+                        <button onclick="selectMealTab('dinner')" id="tab-dinner" class="meal-tab flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 rounded-xl font-bold text-xs sm:text-sm transition-all">
+                            <i data-lucide="UtensilsCrossed" class="w-4 h-4"></i>
+                            <span>Вечеря</span>
+                            <span id="badge-dinner" class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-700">0</span>
+                        </button>
+                        <button onclick="selectMealTab('snack')" id="tab-snack" class="meal-tab flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 rounded-xl font-bold text-xs sm:text-sm transition-all">
+                            <i data-lucide="Apple" class="w-4 h-4"></i>
+                            <span>Перекус</span>
+                            <span id="badge-snack" class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-700">0</span>
+                        </button>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <!-- Вода -->
-                        <div class="bg-slate-50 rounded-xl border border-slate-100 p-4">
-                            <div class="flex items-baseline justify-between mb-1">
-                                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Вода</span>
-                                <span id="water-pct" class="text-[11px] font-semibold text-slate-400">0%</span>
+                    <div class="p-5 sm:p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 id="active-meal-title" class="text-base font-bold text-slate-800">Сніданок</h3>
+                                <p id="active-meal-macros" class="text-xs text-slate-500 mt-0.5">Разом за прийом: 0 ккал • Б: 0 г • Ж: 0 г • В: 0 г</p>
                             </div>
-                            <div class="text-slate-800 mb-2">
-                                <span id="water-value" class="text-xl font-extrabold">0</span>
-                                <span class="text-sm text-slate-400 font-normal"> / <span id="water-goal">2</span> л</span>
-                            </div>
-                            <div class="w-full h-2.5 bg-sky-100 rounded-full overflow-hidden mb-3">
-                                <div id="water-bar" class="h-full bg-sky-500 rounded-full transition-all duration-300" style="width: 0%"></div>
-                            </div>
-                            <div class="flex flex-wrap gap-2">
-                                <button type="button" onclick="addWater(250)" class="px-3 py-2 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-800 text-xs font-bold border border-sky-200 transition-colors">+250 мл</button>
-                                <button type="button" onclick="addWater(500)" class="px-3 py-2 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-800 text-xs font-bold border border-sky-200 transition-colors">+500 мл</button>
-                                <button type="button" onclick="addWater(-250)" class="px-3 py-2 rounded-lg bg-white hover:bg-slate-100 text-slate-600 text-xs font-bold border border-slate-200 transition-colors" title="Відняти 250 мл, якщо натиснули зайвий раз">−250</button>
-                            </div>
-                            <p class="text-[11px] text-slate-400 mt-2 leading-snug">Орієнтир: близько 30 мл на кг ваги. Це загальне правило, а не медична норма.</p>
+                            <button onclick="clearCurrentMeal()" id="btn-clear-meal" class="text-xs text-rose-600 hover:text-rose-700 font-medium hover:underline hidden">
+                                Очистити прийом
+                            </button>
                         </div>
 
-                        <!-- Вага -->
-                        <div class="bg-slate-50 rounded-xl border border-slate-100 p-4">
-                            <div class="flex items-baseline justify-between gap-2 mb-2">
-                                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Вага</span>
-                                <span id="weight-delta" class="text-[11px] font-semibold text-slate-500 text-right"></span>
+                        <!-- Шаблони прийомів їжі -->
+                        <div class="mb-4">
+                            <div class="flex items-center justify-between gap-2 mb-2">
+                                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Мої шаблони</span>
+                                <button type="button" id="btn-save-template" onclick="toggleTemplateForm(true)" class="hidden text-xs font-semibold text-emerald-700 hover:text-emerald-800 hover:underline">+ Зберегти цей прийом як шаблон</button>
                             </div>
-                            <form onsubmit="saveWeightEntry(event)" class="flex gap-2 mb-3">
-                                <input id="weight-input" type="number" inputmode="decimal" step="0.1" min="25" max="300" placeholder="кг" aria-label="Вага в кілограмах" class="w-full min-w-0 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20">
-                                <button type="submit" class="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold whitespace-nowrap transition-colors">Записати</button>
+                            <form id="template-form" onsubmit="saveMealTemplate(event)" class="hidden gap-2 mb-2">
+                                <input id="template-name" type="text" maxlength="40" required placeholder="Назва, наприклад: Мій сніданок" aria-label="Назва шаблону" class="w-full min-w-0 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20">
+                                <button type="submit" class="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold whitespace-nowrap">Зберегти</button>
+                                <button type="button" onclick="toggleTemplateForm(false)" class="px-2.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold" aria-label="Скасувати">✕</button>
                             </form>
-                            <div id="weight-chart"></div>
-                            <div id="weight-readout" class="text-[11px] font-semibold text-slate-600 mt-1 min-h-[16px]"></div>
-                            <button type="button" id="weight-delete-btn" onclick="deleteWeightEntry()" class="hidden mt-1 text-[11px] text-slate-400 hover:text-rose-600 hover:underline">Видалити запис за цей день</button>
+                            <div id="meal-templates-list" class="flex flex-wrap gap-2"></div>
                         </div>
+
+                        <div id="meal-items-list" class="space-y-2.5 min-h-[120px]"></div>
                     </div>
                 </section>
 
@@ -661,7 +667,7 @@
                                 <label for="ai-user-note" class="block text-xs font-semibold text-slate-200 mb-1.5">
                                     Додаткове уточнення для ШІ <span class="text-slate-400 font-normal">(необов'язково)</span>
                                 </label>
-                                <textarea id="ai-user-note" rows="2" placeholder="Наприклад: Смажено без олії, всередині індичка, велика порція ~350г..." class="w-full bg-white/10 border border-white/15 rounded-xl px-3.5 py-2 text-xs sm:text-sm text-white placeholder-slate-400 focus:outline-none focus:border-emerald-400 focus:bg-white/15 transition-all resize-none"></textarea>
+                                <textarea id="ai-user-note" rows="3" placeholder="Наприклад: смажено без олії, всередині індичка, порція ~350 г" class="w-full bg-white/10 border border-white/15 rounded-xl px-3.5 py-2 text-xs sm:text-sm text-white placeholder-slate-400 focus:outline-none focus:border-emerald-400 focus:bg-white/15 transition-all resize-none"></textarea>
                             </div>
 
                             <div>
@@ -740,60 +746,6 @@
                     </div>
                 </section>
 
-                <!-- Вкладки прийомів їжі -->
-                <section class="bg-white rounded-2xl shadow-xs border border-slate-200/80 overflow-hidden">
-                    <div class="grid grid-cols-4 border-b border-slate-200 bg-slate-50/60 p-1.5 gap-1.5">
-                        <button onclick="selectMealTab('breakfast')" id="tab-breakfast" class="meal-tab flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 rounded-xl font-bold text-xs sm:text-sm transition-all">
-                            <i data-lucide="Coffee" class="w-4 h-4"></i>
-                            <span>Сніданок</span>
-                            <span id="badge-breakfast" class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-700">0</span>
-                        </button>
-                        <button onclick="selectMealTab('lunch')" id="tab-lunch" class="meal-tab flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 rounded-xl font-bold text-xs sm:text-sm transition-all">
-                            <i data-lucide="Soup" class="w-4 h-4"></i>
-                            <span>Обід</span>
-                            <span id="badge-lunch" class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-700">0</span>
-                        </button>
-                        <button onclick="selectMealTab('dinner')" id="tab-dinner" class="meal-tab flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 rounded-xl font-bold text-xs sm:text-sm transition-all">
-                            <i data-lucide="UtensilsCrossed" class="w-4 h-4"></i>
-                            <span>Вечеря</span>
-                            <span id="badge-dinner" class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-700">0</span>
-                        </button>
-                        <button onclick="selectMealTab('snack')" id="tab-snack" class="meal-tab flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 rounded-xl font-bold text-xs sm:text-sm transition-all">
-                            <i data-lucide="Apple" class="w-4 h-4"></i>
-                            <span>Перекус</span>
-                            <span id="badge-snack" class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-700">0</span>
-                        </button>
-                    </div>
-
-                    <div class="p-5 sm:p-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <div>
-                                <h3 id="active-meal-title" class="text-base font-bold text-slate-800">Сніданок</h3>
-                                <p id="active-meal-macros" class="text-xs text-slate-500 mt-0.5">Разом за прийом: 0 ккал • Б: 0 г • Ж: 0 г • В: 0 г</p>
-                            </div>
-                            <button onclick="clearCurrentMeal()" id="btn-clear-meal" class="text-xs text-rose-600 hover:text-rose-700 font-medium hover:underline hidden">
-                                Очистити прийом
-                            </button>
-                        </div>
-
-                        <!-- Шаблони прийомів їжі -->
-                        <div class="mb-4">
-                            <div class="flex items-center justify-between gap-2 mb-2">
-                                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Мої шаблони</span>
-                                <button type="button" id="btn-save-template" onclick="toggleTemplateForm(true)" class="hidden text-xs font-semibold text-emerald-700 hover:text-emerald-800 hover:underline">+ Зберегти цей прийом як шаблон</button>
-                            </div>
-                            <form id="template-form" onsubmit="saveMealTemplate(event)" class="hidden gap-2 mb-2">
-                                <input id="template-name" type="text" maxlength="40" required placeholder="Назва, наприклад: Мій сніданок" aria-label="Назва шаблону" class="w-full min-w-0 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20">
-                                <button type="submit" class="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold whitespace-nowrap">Зберегти</button>
-                                <button type="button" onclick="toggleTemplateForm(false)" class="px-2.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold" aria-label="Скасувати">✕</button>
-                            </form>
-                            <div id="meal-templates-list" class="flex flex-wrap gap-2"></div>
-                        </div>
-
-                        <div id="meal-items-list" class="space-y-2.5 min-h-[120px]"></div>
-                    </div>
-                </section>
-
                 <!-- База продуктів -->
                 <section class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-5 sm:p-6">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
@@ -812,14 +764,14 @@
 
                     <div class="space-y-3 mb-4">
                         <div class="relative">
-                            <i data-lucide="Search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
-                            <input type="text" id="food-search" oninput="renderFoodDatabase()" placeholder="Пошук продукту (наприклад: куряче філе, гречка, сир, борщ)..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20">
-                            <button onclick="clearSearch()" id="btn-clear-search" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                            <i data-lucide="Search" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                            <input type="text" id="food-search" oninput="renderFoodDatabase()" placeholder="Пошук: куряче філе, гречка, борщ" class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20">
+                            <button onclick="clearSearch()" id="btn-clear-search" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-600">
                                 <i data-lucide="X" class="w-4 h-4"></i>
                             </button>
                         </div>
 
-                        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar" id="category-filters">
+                        <div class="relative"><div class="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar pr-8" id="category-filters">
                             <button onclick="setFoodCategory('all')" data-cat="all" class="cat-btn whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold transition-all">Всі</button>
                             <button onclick="setFoodCategory('М\'ясо та птиця')" data-cat="М'ясо та птиця" class="cat-btn whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold transition-all">М'ясо та птиця</button>
                             <button onclick="setFoodCategory('Риба та морепродукти')" data-cat="Риба та морепродукти" class="cat-btn whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold transition-all">Риба</button>
@@ -831,9 +783,59 @@
                             <button onclick="setFoodCategory('Готові страви')" data-cat="Готові страви" class="cat-btn whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold transition-all">Готові страви</button>
                             <button onclick="setFoodCategory('Мої продукти')" data-cat="Мої продукти" class="cat-btn whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold transition-all">Мої продукти</button>
                         </div>
+                        <div class="pointer-events-none absolute right-0 top-0 bottom-1 w-10 bg-gradient-to-l from-white to-transparent"></div></div>
                     </div>
 
                     <div id="food-db-list" class="space-y-2 max-h-[380px] overflow-y-auto pr-1 custom-scrollbar"></div>
+                </section>
+
+                <!-- ВОДА ТА ВАГА -->
+                <section id="water-weight-section" class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-5 sm:p-6">
+                    <div class="mb-4">
+                        <h2 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
+                            <i data-lucide="Droplets" class="w-5 h-5 text-sky-600"></i>
+                            <span>Вода та вага</span>
+                        </h2>
+                        <p class="text-xs text-slate-500">Дані за вибрану дату: <strong id="ww-date-label" class="text-slate-700">Сьогодні</strong></p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Вода -->
+                        <div class="bg-slate-50 rounded-xl border border-slate-100 p-4">
+                            <div class="flex items-baseline justify-between mb-1">
+                                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Вода</span>
+                                <span id="water-pct" class="text-[11px] font-semibold text-slate-500">0%</span>
+                            </div>
+                            <div class="text-slate-800 mb-2">
+                                <span id="water-value" class="text-xl font-extrabold">0</span>
+                                <span class="text-sm text-slate-500 font-normal"> / <span id="water-goal">2</span> л</span>
+                            </div>
+                            <div class="w-full h-2.5 bg-sky-100 rounded-full overflow-hidden mb-3">
+                                <div id="water-bar" class="h-full bg-sky-500 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                <button type="button" onclick="addWater(250)" class="px-3 py-2 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-800 text-xs font-bold border border-sky-200 transition-colors">+250 мл</button>
+                                <button type="button" onclick="addWater(500)" class="px-3 py-2 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-800 text-xs font-bold border border-sky-200 transition-colors">+500 мл</button>
+                                <button type="button" onclick="addWater(-250)" class="px-3 py-2 rounded-lg bg-white hover:bg-slate-100 text-slate-600 text-xs font-bold border border-slate-200 transition-colors" title="Відняти 250 мл, якщо натиснули зайвий раз">−250</button>
+                            </div>
+                            <p class="text-[11px] text-slate-500 mt-2 leading-snug">Орієнтир: близько 30 мл на кг ваги. Це загальне правило, а не медична норма.</p>
+                        </div>
+
+                        <!-- Вага -->
+                        <div class="bg-slate-50 rounded-xl border border-slate-100 p-4">
+                            <div class="flex items-baseline justify-between gap-2 mb-2">
+                                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Вага</span>
+                                <span id="weight-delta" class="text-[11px] font-semibold text-slate-500 text-right"></span>
+                            </div>
+                            <form onsubmit="saveWeightEntry(event)" class="flex gap-2 mb-3">
+                                <input id="weight-input" type="number" inputmode="decimal" step="0.1" min="25" max="300" placeholder="кг" aria-label="Вага в кілограмах" class="w-full min-w-0 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20">
+                                <button type="submit" class="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold whitespace-nowrap transition-colors">Записати</button>
+                            </form>
+                            <div id="weight-chart"></div>
+                            <div id="weight-readout" class="text-[11px] font-semibold text-slate-600 mt-1 min-h-[16px]"></div>
+                            <button type="button" id="weight-delete-btn" onclick="deleteWeightEntry()" class="hidden mt-1 text-[11px] text-slate-500 hover:text-rose-600 hover:underline">Видалити запис за цей день</button>
+                        </div>
+                    </div>
                 </section>
 
             </div>
@@ -853,7 +855,7 @@
                         <p class="text-xs text-slate-500">Середня калорійність та виконання цілей</p>
                     </div>
                 </div>
-                <button onclick="toggleStatsModal(false)" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                <button onclick="toggleStatsModal(false)" class="text-slate-500 hover:text-slate-600 p-1 rounded-lg">
                     <i data-lucide="X" class="w-5 h-5"></i>
                 </button>
             </div>
@@ -875,7 +877,7 @@
         <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-bold text-slate-900">Додати свій продукт</h3>
-                <button onclick="toggleCustomFoodModal(false)" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                <button onclick="toggleCustomFoodModal(false)" class="text-slate-500 hover:text-slate-600 p-1 rounded-lg">
                     <i data-lucide="X" class="w-5 h-5"></i>
                 </button>
             </div>
@@ -934,7 +936,7 @@
                         <p class="text-xs text-slate-500">Запускайте NutriPlan PRO з іконки на головному екрані</p>
                     </div>
                 </div>
-                <button onclick="toggleInstallModal(false)" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                <button onclick="toggleInstallModal(false)" class="text-slate-500 hover:text-slate-600 p-1 rounded-lg">
                     <i data-lucide="X" class="w-5 h-5"></i>
                 </button>
             </div>
@@ -1007,7 +1009,7 @@
                         <p class="text-xs text-slate-500">Автономний AI-Сканер та резервна копія історії</p>
                     </div>
                 </div>
-                <button onclick="toggleSettingsModal(false)" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                <button onclick="toggleSettingsModal(false)" class="text-slate-500 hover:text-slate-600 p-1 rounded-lg">
                     <i data-lucide="X" class="w-5 h-5"></i>
                 </button>
             </div>
@@ -1022,7 +1024,7 @@
                 </p>
                 <div class="relative mb-2">
                     <input type="password" id="input-user-api-key" placeholder="AIzaSy... (залиште порожнім)" class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-3.5 pr-10 py-2.5 text-sm font-mono text-slate-800 focus:outline-none focus:border-emerald-500">
-                    <button type="button" onclick="toggleApiKeyVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                    <button type="button" onclick="toggleApiKeyVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-600">
                         <i data-lucide="Eye" class="w-4 h-4"></i>
                     </button>
                 </div>
@@ -1038,7 +1040,7 @@
                     </div>
                 </div>
                 <div id="api-key-test-result" class="hidden mt-3 text-[11px] leading-relaxed bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-1 break-words" role="status"></div>
-                <p class="text-[11px] text-slate-400 mt-2">Версія додатка: nutriplan-v3</p>
+                <p class="text-[11px] text-slate-500 mt-2">Версія додатка: nutriplan-v4</p>
             </div>
 
             <div class="pt-4 border-t border-slate-200">
@@ -1417,6 +1419,11 @@
 
         function getAllFoods() {
             return [...state.customFoods, ...DEFAULT_FOODS];
+        }
+
+        function scrollToParams() {
+            const el = document.getElementById('params-section');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         function scrollToAIScanner() {
@@ -2130,7 +2137,7 @@
 
             const container = document.getElementById('meal-items-list');
             if (items.length === 0) {
-                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs">У прийомі їжі поки порожньо</div>`;
+                container.innerHTML = `<div class="text-center py-8 text-slate-500 text-xs">У прийомі їжі поки порожньо</div>`;
                 lucide.createIcons();
                 return;
             }
@@ -2143,7 +2150,7 @@
                 return `
                     <div class="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200/80">
                         <div class="min-w-0 flex-1">
-                            <div class="font-bold text-xs sm:text-sm text-slate-800 truncate">${escapeHtml(food.name)}</div>
+                            <div class="font-bold text-xs sm:text-sm text-slate-800 leading-snug line-clamp-2 break-words">${escapeHtml(food.name)}</div>
                             <div id="stats-${item.instanceId}" class="text-xs mt-0.5">
                                 <span class="font-bold text-slate-800">${Math.round(food.kcal * r)} ккал</span>
                                 <span class="text-blue-600">Б:${(food.p * r).toFixed(1)}</span>
@@ -2155,10 +2162,10 @@
                             <div class="flex items-center bg-white border border-slate-200 rounded-lg p-0.5">
                                 <button type="button" onclick="stepMealItemGrams('${item.instanceId}', -10)" class="w-6 h-6 font-bold text-xs">−</button>
                                 <input type="number" value="${item.grams}" oninput="updateMealItemGrams('${item.instanceId}', this.value)" class="w-12 text-center font-bold text-xs">
-                                <span class="text-xs text-slate-400 pr-1">г</span>
+                                <span class="text-xs text-slate-500 pr-1">г</span>
                                 <button type="button" onclick="stepMealItemGrams('${item.instanceId}', 10)" class="w-6 h-6 font-bold text-xs">+</button>
                             </div>
-                            <button type="button" onclick="removeMealItem('${item.instanceId}')" class="p-1.5 text-slate-400 hover:text-rose-600"><i data-lucide="Trash2" class="w-4 h-4"></i></button>
+                            <button type="button" onclick="removeMealItem('${item.instanceId}')" class="p-1.5 text-slate-500 hover:text-rose-600"><i data-lucide="Trash2" class="w-4 h-4"></i></button>
                         </div>
                     </div>
                 `;
@@ -2226,7 +2233,7 @@
             if (!box) return;
             const list = state.mealTemplates || [];
             if (list.length === 0) {
-                box.innerHTML = '<p class="text-xs text-slate-400">Збережіть прийом їжі як шаблон, щоб потім додавати його одним натиском.</p>';
+                box.innerHTML = '<p class="text-xs text-slate-500">Збережіть прийом їжі як шаблон, щоб потім додавати його одним натиском.</p>';
                 return;
             }
             box.innerHTML = list.map(tpl => {
@@ -2401,7 +2408,7 @@
                 .slice(-30);
 
             if (entries.length === 0) {
-                box.innerHTML = '<div class="text-xs text-slate-400 py-3">Запишіть вагу, і тут з’явиться графік.</div>';
+                box.innerHTML = '<div class="text-xs text-slate-500 py-3">Запишіть вагу, і тут з’явиться графік.</div>';
                 deltaEl.textContent = '';
                 readout.textContent = '';
                 return;
@@ -2484,14 +2491,14 @@
 
             const listEl = document.getElementById('food-db-list');
             if (filtered.length === 0) {
-                listEl.innerHTML = `<div class="text-center py-6 text-xs text-slate-400">Продуктів не знайдено</div>`;
+                listEl.innerHTML = `<div class="text-center py-6 text-xs text-slate-500">Продуктів не знайдено</div>`;
                 return;
             }
 
             const foodRowHtml = food => `
                 <div class="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 hover:border-emerald-300">
                     <div class="min-w-0 pr-2">
-                        <div class="font-bold text-xs sm:text-sm text-slate-800 truncate">${escapeHtml(food.name)}</div>
+                        <div class="font-bold text-xs sm:text-sm text-slate-800 leading-snug line-clamp-2 break-words">${escapeHtml(food.name)}</div>
                         <div class="text-[11px] text-slate-500">${food.kcal} ккал/100г (Б:${food.p} Ж:${food.f} В:${food.c})</div>
                     </div>
                     <button onclick="addFoodToActiveMeal('${food.id}')" class="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white font-bold text-xs px-2.5 py-1.5 rounded-lg border border-emerald-200 transition-all">
@@ -2504,9 +2511,9 @@
             if (!q && activeCategory === 'all') {
                 const recentFoods = (state.recentFoodIds || []).map(id => all.find(f => f.id === id)).filter(Boolean);
                 if (recentFoods.length > 0) {
-                    recentsHtml = '<div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-1 pt-1">Нещодавні</div>'
+                    recentsHtml = '<div class="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-1 pt-1">Нещодавні</div>'
                         + recentFoods.map(foodRowHtml).join('')
-                        + '<div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-1 pt-3">Усі продукти</div>';
+                        + '<div class="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-1 pt-3">Усі продукти</div>';
                 }
             }
             listEl.innerHTML = recentsHtml + filtered.map(foodRowHtml).join('');
