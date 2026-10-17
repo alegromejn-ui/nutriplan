@@ -1028,10 +1028,17 @@
                 </div>
                 <div class="flex items-center justify-between gap-2">
                     <span id="api-key-status-text" class="text-[11px] font-medium text-emerald-700">Статус: ключ не вказано</span>
-                    <button type="button" onclick="saveUserApiKey()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition-colors shadow-2xs">
-                        Зберегти ключ
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button type="button" id="btn-test-api-key" onclick="testGeminiKey()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs px-3 py-2 rounded-xl border border-slate-200/80 transition-colors disabled:opacity-50">
+                            Перевірити ключ
+                        </button>
+                        <button type="button" onclick="saveUserApiKey()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition-colors shadow-2xs">
+                            Зберегти ключ
+                        </button>
+                    </div>
                 </div>
+                <div id="api-key-test-result" class="hidden mt-3 text-[11px] leading-relaxed bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-1 break-words" role="status"></div>
+                <p class="text-[11px] text-slate-400 mt-2">Версія додатка: nutriplan-v3</p>
             </div>
 
             <div class="pt-4 border-t border-slate-200">
@@ -1258,6 +1265,7 @@
             if (show) {
                 document.getElementById('input-user-api-key').value = localStorage.getItem('nutriplan_user_gemini_key') || '';
                 updateApiKeyStatusUI();
+                const tr = document.getElementById('api-key-test-result'); if (tr) { tr.classList.add('hidden'); tr.textContent = ''; }
             }
             document.getElementById('modal-settings').classList.toggle('hidden', !show);
             lucide.createIcons();
@@ -1702,24 +1710,35 @@
         }
         function hideAIError() { document.getElementById('ai-error-box').classList.add('hidden'); }
 
-        // Поточна модель Gemini; якщо недоступна (404) — пробуємо наступну зі списку
-        const GEMINI_MODELS = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
+        // Моделі Gemini за пріоритетом. Якщо модель недоступна (404) чи перевантажена (503), пробуємо наступну.
+        const GEMINI_MODELS = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-2.5-flash'];
+        const GEMINI_DELAYS = [1000, 2000, 4000];
 
         function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+        function getGeminiKey() { try { return (localStorage.getItem('nutriplan_user_gemini_key') || '').trim(); } catch (e) { return ''; } }
+
+        // Пояснення від Google з відповіді на помилку: JSON-повідомлення, а якщо це не JSON, то початок тексту без тегів.
+        async function geminiErrorDetail(res) {
+            let raw = '';
+            try { raw = await res.text(); } catch (e) { return ''; }
+            raw = String(raw || '').trim();
+            if (!raw) return '';
+            try { const o = JSON.parse(raw); const em = o && o.error; const m = em && (em.message || em.status); if (m) return String(m).slice(0, 300); } catch (e2) { /* не JSON */ }
+            return raw.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 300);
+        }
 
         async function fetchGeminiWithBackoff(payload) {
-            const apiKey = (localStorage.getItem('nutriplan_user_gemini_key') || '').trim();
+            const apiKey = getGeminiKey();
             if (!apiKey) {
                 const e = new Error('NO_KEY');
                 e.code = 'NO_KEY';
                 throw e;
             }
-            const delays = [1000, 2000, 4000];
-            let lastErr = null;
-
+            // Повтори (з паузою) спільні для всіх моделей: перевантажена модель не змушує чекати по кілька разів поспіль.
+            let used = 0, lastErr = null, softErr = null;
             for (const model of GEMINI_MODELS) {
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-                for (let attempt = 0; attempt <= delays.length; attempt++) {
+                for (;;) {
                     let res;
                     try {
                         res = await fetch(apiUrl, {
@@ -1728,10 +1747,10 @@
                             body: JSON.stringify(payload)
                         });
                     } catch (netErr) {
-                        lastErr = new Error('NETWORK');
+                        lastErr = softErr = new Error('NETWORK');
                         lastErr.code = 'NETWORK';
-                        if (attempt === delays.length) break;
-                        await sleep(delays[attempt]);
+                        if (used >= GEMINI_DELAYS.length) break;
+                        await sleep(GEMINI_DELAYS[used++]);
                         continue;
                     }
                     if (res.ok) return await res.json();
@@ -1739,28 +1758,75 @@
                     lastErr = new Error('HTTP ' + res.status);
                     lastErr.code = 'HTTP_' + res.status;
                     lastErr.status = res.status;
+                    lastErr.model = model;
+                    lastErr.detail = await geminiErrorDetail(res);
 
-                    if (res.status === 404) break;                       // модель недоступна — пробуємо наступну
-                    if (res.status === 429 || res.status >= 500) {       // тимчасова проблема — повторюємо
-                        if (attempt === delays.length) break;
-                        await sleep(delays[attempt]);
+                    if (res.status === 404) break;                       // модель недоступна: наступна
+                    if (res.status === 429 || res.status >= 500) {       // тимчасова проблема: повторюємо, потім наступна модель
+                        softErr = lastErr;
+                        if (used >= GEMINI_DELAYS.length) break;
+                        await sleep(GEMINI_DELAYS[used++]);
                         continue;
                     }
-                    throw lastErr;                                       // 400/401/403 — повторювати марно
+                    throw lastErr;                                       // 400/401/403: повторювати марно
                 }
             }
+            // «Модель недоступна» (404) не має перекривати справжню причину: перевантаження чи ліміт.
+            if (lastErr && lastErr.status === 404 && softErr) throw softErr;
             throw lastErr || new Error('UNKNOWN');
         }
 
         function describeGeminiError(err) {
             const status = err && err.status;
             if (err && err.code === 'NO_KEY') return 'Не вказано ключ Gemini API. Натисніть «Налаштувати API» і вставте свій ключ із Google AI Studio.';
-            if (err && err.code === 'NETWORK') return 'Немає з\u2019єднання з інтернетом. Перевірте мережу й спробуйте ще раз.';
-            if (status === 400 || status === 401 || status === 403) return `Gemini відхилив запит (код ${status}). Перевірте, чи ключ скопійовано повністю і чи він активний.`;
-            if (status === 404) return 'Жодна з моделей Gemini, зазначених у коді, недоступна для вашого ключа. Потрібно оновити назви моделей у файлі index.html (список GEMINI_MODELS).';
+            if (err && err.code === 'NETWORK') return 'Немає з’єднання з інтернетом. Перевірте мережу й спробуйте ще раз.';
+            if (status === 400 || status === 401 || status === 403) {
+                const d = String((err && err.detail) || '');
+                const low = d.toLowerCase();
+                if (/leak/.test(low)) return `Google вимкнув цей ключ, бо він був у відкритому доступі (код ${status}). Створіть новий ключ на aistudio.google.com/apikey і вставте його в налаштуваннях.`;
+                if (/referer|referrer/.test(low)) return `Ключ обмежено за сайтом (код ${status}). У Google AI Studio зніміть обмеження за адресою сайту або додайте адресу цього додатка.`;
+                if (/not valid|invalid/.test(low)) return `Google вважає ключ недійсним (код ${status}). Скопіюйте його ще раз повністю.`;
+                if (/has not been used|disabled|not enabled/.test(low)) return `У проєкті цього ключа вимкнено Gemini API (код ${status}). Увімкніть його в Google AI Studio або створіть новий ключ.`;
+                return `Gemini відхилив запит (код ${status}${err.model ? ', ' + err.model : ''}). ` + (d ? `Відповідь Google: «${d.slice(0, 160)}».` : 'Google не пояснив причину.') + ' Натисніть «Перевірити ключ» у налаштуваннях API.';
+            }
+            if (status === 404) return 'Жодна з моделей Gemini недоступна для вашого ключа. Натисніть «Перевірити ключ» у налаштуваннях API: там видно, які моделі відповідають.';
             if (status === 429) return 'Перевищено ліміт запитів Gemini. Зачекайте хвилину і спробуйте ще раз.';
-            if (status >= 500) return 'Сервіс Gemini тимчасово недоступний. Спробуйте пізніше.';
+            if (status >= 500) return `Моделі Gemini зараз перевантажені (код ${status}). Це тимчасово на боці Google: спробуйте ще раз за кілька хвилин.`;
             return 'Не вдалося розпізнати страву. Спробуйте інше фото або додайте уточнення в текстове поле.';
+        }
+
+        // Діагностика ключа: кожен крок показує код і пояснення Google (сам ключ ніде не показується й не потрапляє в адресу).
+        async function testGeminiKey() {
+            const box = document.getElementById('api-key-test-result');
+            const btn = document.getElementById('btn-test-api-key');
+            const typed = (document.getElementById('input-user-api-key').value || '').trim();
+            const apiKey = typed || getGeminiKey();
+            box.classList.remove('hidden');
+            if (!apiKey) { box.textContent = 'Спершу вставте ключ у поле вище.'; return; }
+            btn.disabled = true;
+            box.innerHTML = '';
+            const addLine = (ok, step, text) => {
+                const row = document.createElement('div');
+                row.className = ok ? 'text-emerald-700' : 'text-rose-600';
+                row.textContent = (ok ? '✓ ' : '✗ ') + step + ': ' + text;
+                box.appendChild(row);
+            };
+            const run = async (step, url, opts) => {
+                let r;
+                try { r = await fetch(url, opts); } catch (e) { addLine(false, step, 'немає зв’язку з Google (мережа, VPN або блокувальник)'); return; }
+                if (r.ok) { addLine(true, step, 'ОК (' + r.status + ')'); return; }
+                const d = await geminiErrorDetail(r);
+                addLine(false, step, 'код ' + r.status + (d ? ': ' + d.slice(0, 160) : ', без пояснення'));
+            };
+            try {
+                await run('Список моделей', 'https://generativelanguage.googleapis.com/v1beta/models', { method: 'GET', headers: { 'x-goog-api-key': apiKey } });
+                const body = JSON.stringify({ contents: [{ parts: [{ text: 'Відповідай одним словом: ок' }] }] });
+                for (const m of GEMINI_MODELS) {
+                    await run(m, `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey }, body });
+                }
+            } finally {
+                btn.disabled = false;
+            }
         }
 
         async function analyzeFoodWithGemini() {
