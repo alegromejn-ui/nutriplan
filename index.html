@@ -1890,15 +1890,41 @@
             return 'Ти дієтолог. На фото їжа. Знайди КОЖНУ окрему страву чи продукт на тарілці й запиши кожну окремим елементом списку items ' +
                 '(наприклад: омлет, гречка, авокадо, хліб, соус, напій). Нічого не об’єднуй в одну позицію і нічого не пропускай. ' +
                 'Для кожного елемента: name українською; grams: вага порції, яку видно на фото (оціни за розміром тарілки); ' +
-                'kcalPer100, pPer100, fPer100, cPer100: калорії, білки, жири, вуглеводи на 100 г готового продукту, усі числа заповни, не нулі, якщо це не вода. ' +
+                'kcalPer100, pPer100, fPer100, cPer100: калорії, білки, жири, вуглеводи на 100 г готового продукту за стандартними таблицями складу продуктів (USDA), усі числа заповни, не нулі, якщо це не вода. ' +
+                'Вагу grams округляй до 5 г. Не вигадуй зайвого: рахуй лише те, що видно на фото. ' +
                 'dishTitle: коротка назва всієї тарілки, summary: одне речення. ' +
                 (userNote ? 'Уточнення від користувача: «' + userNote + '». Врахуй його.' : '');
+        }
+        // Те саме фото + те саме уточнення завжди дають однакові цифри: результат запам'ятовується
+        const AI_CACHE_KEY = 'nutriplan_ai_plate_cache_v1', AI_PROMPT_VER = 'p6';
+        function aiFingerprint(note, data) {
+            let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+            const s = AI_PROMPT_VER + '|' + note + '|' + (data || '');
+            for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677); }
+            h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+            h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+            return (h2 >>> 0).toString(16) + (h1 >>> 0).toString(16) + '_' + s.length;
+        }
+        function aiCacheGet(k) { try { const c = JSON.parse(localStorage.getItem(AI_CACHE_KEY) || '[]'); return c.find(e => e.k === k) || null; } catch (e) { return null; } }
+        function aiCachePut(k, title, summary, items) {
+            try {
+                const c = JSON.parse(localStorage.getItem(AI_CACHE_KEY) || '[]').filter(e => e.k !== k);
+                c.unshift({ k: k, title: title, summary: summary, items: items }); localStorage.setItem(AI_CACHE_KEY, JSON.stringify(c.slice(0, 20)));
+            } catch (e) { /* сховище недоступне: просто без кешу */ }
         }
         async function analyzeFoodWithGemini() {
             hideAIError();
             const userNote = document.getElementById('ai-user-note').value.trim();
             if (!aiScannerState.base64Data && !userNote) {
                 showAIError('Зробіть фото тарілки або оберіть демо-приклад.');
+                return;
+            }
+
+            const cacheKey = aiFingerprint(userNote, aiScannerState.base64Data);
+            const hit = aiCacheGet(cacheKey);
+            if (hit) {
+                displayAIDetectedPlate(hit.title, hit.summary, hit.items);
+                showToast('Те саме фото: цифри ті самі. Щоб порахувати заново, змініть уточнення або зробіть нове фото');
                 return;
             }
 
@@ -1919,7 +1945,8 @@
                     const res = await fetchGeminiWithBackoff({
                         contents: [{ role: 'user', parts }],
                         generationConfig: {
-                            temperature: 0.2,
+                            temperature: 0,                          // без випадковості: те саме фото — ті самі цифри
+                            seed: 7,
                             maxOutputTokens: 4096,
                             thinkingConfig: { thinkingBudget: 0 },   // без довгих роздумів: набагато швидше
                             responseMimeType: "application/json",
@@ -1935,6 +1962,7 @@
                     showAIError('ШІ не зміг порахувати калорії для цього фото. Спробуйте ще раз або допишіть уточнення, наприклад: «омлет, гречка, авокадо».');
                 } else {
                     displayAIDetectedPlate(parsed.dishTitle, parsed.summary, items);
+                    aiCachePut(cacheKey, parsed.dishTitle, parsed.summary, items);
                     if (dropped > 0) showToast('Частину позицій ШІ не оцінив, додайте їх вручну');
                 }
             } catch (err) {

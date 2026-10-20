@@ -1,6 +1,6 @@
 // NutriPlan PRO — service worker (офлайн-режим)
 // Змінюйте VERSION при кожному оновленні файлів, щоб старий кеш очищався.
-const VERSION = 'nutriplan-v5';
+const VERSION = 'nutriplan-v6';
 
 const CORE_FILES = [
   './',
