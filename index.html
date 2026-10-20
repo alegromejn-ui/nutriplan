@@ -1720,6 +1720,7 @@
         // Моделі Gemini за пріоритетом. Якщо модель недоступна (404) чи перевантажена (503), пробуємо наступну.
         const GEMINI_MODELS = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-2.5-flash'];
         const GEMINI_DELAYS = [1000, 2000, 4000];
+        const GEMINI_TIMEOUT = 35000; // довше не чекаємо одну модель: пробуємо наступну
 
         function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
         function getGeminiKey() { try { return (localStorage.getItem('nutriplan_user_gemini_key') || '').trim(); } catch (e) { return ''; } }
@@ -1742,24 +1743,29 @@
                 throw e;
             }
             // Повтори (з паузою) спільні для всіх моделей: перевантажена модель не змушує чекати по кілька разів поспіль.
-            let used = 0, lastErr = null, softErr = null;
+            let used = 0, slowCount = 0, lastErr = null, softErr = null;
             for (const model of GEMINI_MODELS) {
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
                 for (;;) {
                     let res;
+                    const ctl = typeof AbortController === 'function' ? new AbortController() : null;
+                    const timer = ctl ? setTimeout(() => ctl.abort(), GEMINI_TIMEOUT) : 0;
                     try {
                         res = await fetch(apiUrl, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-                            body: JSON.stringify(payload)
+                            body: JSON.stringify(payload),
+                            signal: ctl ? ctl.signal : undefined
                         });
                     } catch (netErr) {
-                        lastErr = softErr = new Error('NETWORK');
-                        lastErr.code = 'NETWORK';
+                        const slow = !!(ctl && ctl.signal.aborted);
+                        lastErr = softErr = new Error(slow ? 'TIMEOUT' : 'NETWORK');
+                        lastErr.code = slow ? 'TIMEOUT' : 'NETWORK';
+                        if (slow) { if (++slowCount >= 2) throw lastErr; break; }   // повільна модель: одразу наступна, але не більше двох разів
                         if (used >= GEMINI_DELAYS.length) break;
                         await sleep(GEMINI_DELAYS[used++]);
                         continue;
-                    }
+                    } finally { if (timer) clearTimeout(timer); }
                     if (res.ok) return await res.json();
 
                     lastErr = new Error('HTTP ' + res.status);
@@ -1768,6 +1774,12 @@
                     lastErr.model = model;
                     lastErr.detail = await geminiErrorDetail(res);
 
+                    // Модель не приймає налаштування «без роздумів»: повторюємо цей самий запит без нього
+                    if (res.status === 400 && payload.generationConfig && payload.generationConfig.thinkingConfig && /think/i.test(lastErr.detail || '')) {
+                        payload = Object.assign({}, payload, { generationConfig: Object.assign({}, payload.generationConfig) });
+                        delete payload.generationConfig.thinkingConfig;
+                        continue;
+                    }
                     if (res.status === 404) break;                       // модель недоступна: наступна
                     if (res.status === 429 || res.status >= 500) {       // тимчасова проблема: повторюємо, потім наступна модель
                         softErr = lastErr;
@@ -1786,6 +1798,7 @@
         function describeGeminiError(err) {
             const status = err && err.status;
             if (err && err.code === 'NO_KEY') return 'Не вказано ключ Gemini API. Натисніть «Налаштувати API» і вставте свій ключ із Google AI Studio.';
+            if (err && err.code === 'TIMEOUT') return 'Gemini відповідає надто довго (понад 35 секунд). Спробуйте ще раз: зазвичай друга спроба швидша.';
             if (err && err.code === 'NETWORK') return 'Немає з’єднання з інтернетом. Перевірте мережу й спробуйте ще раз.';
             if (status === 400 || status === 401 || status === 403) {
                 const d = String((err && err.detail) || '');
@@ -1836,6 +1849,51 @@
             }
         }
 
+        // Перевірка відповіді ШІ: позиція без ваги чи калорій не береться (раніше підставлялося «100 г, 100 ккал, Б/Ж/В 0»).
+        function cleanAIItems(raw) {
+            const num = v => { const n = Number(String(v == null ? '' : v).replace(',', '.')); return isFinite(n) ? n : 0; };
+            return (Array.isArray(raw) ? raw : []).map(it => {
+                if (!it || !String(it.name || '').trim()) return null;
+                const g = num(it.grams), p = Math.max(0, num(it.pPer100)), f = Math.max(0, num(it.fPer100)), c = Math.max(0, num(it.cPer100));
+                let k = num(it.kcalPer100);
+                if (!(k > 0) && (p > 0 || f > 0 || c > 0)) k = 4 * p + 4 * c + 9 * f;
+                if (!(g > 0) || !(k > 0)) return null;
+                return { name: String(it.name).trim(), grams: g, kcalPer100: k, pPer100: p, fPer100: f, cPer100: c };
+            }).filter(Boolean);
+        }
+        const AI_PLATE_SCHEMA = {
+            type: "OBJECT",
+            properties: {
+                dishTitle: { type: "STRING" },
+                summary: { type: "STRING" },
+                items: {
+                    type: "ARRAY",
+                    items: {
+                        type: "OBJECT",
+                        properties: {
+                            name: { type: "STRING" },
+                            grams: { type: "NUMBER" },
+                            kcalPer100: { type: "NUMBER" },
+                            pPer100: { type: "NUMBER" },
+                            fPer100: { type: "NUMBER" },
+                            cPer100: { type: "NUMBER" }
+                        },
+                        required: ["name", "grams", "kcalPer100", "pPer100", "fPer100", "cPer100"],
+                        propertyOrdering: ["name", "grams", "kcalPer100", "pPer100", "fPer100", "cPer100"]
+                    }
+                }
+            },
+            required: ["dishTitle", "summary", "items"],
+            propertyOrdering: ["dishTitle", "summary", "items"]
+        };
+        function plateInstruction(userNote) {
+            return 'Ти дієтолог. На фото їжа. Знайди КОЖНУ окрему страву чи продукт на тарілці й запиши кожну окремим елементом списку items ' +
+                '(наприклад: омлет, гречка, авокадо, хліб, соус, напій). Нічого не об’єднуй в одну позицію і нічого не пропускай. ' +
+                'Для кожного елемента: name українською; grams: вага порції, яку видно на фото (оціни за розміром тарілки); ' +
+                'kcalPer100, pPer100, fPer100, cPer100: калорії, білки, жири, вуглеводи на 100 г готового продукту, усі числа заповни, не нулі, якщо це не вода. ' +
+                'dishTitle: коротка назва всієї тарілки, summary: одне речення. ' +
+                (userNote ? 'Уточнення від користувача: «' + userNote + '». Врахуй його.' : '');
+        }
         async function analyzeFoodWithGemini() {
             hideAIError();
             const userNote = document.getElementById('ai-user-note').value.trim();
@@ -1848,42 +1906,41 @@
             document.getElementById('btn-analyze-text').textContent = 'ШІ аналізує тарілку...';
             document.getElementById('ai-scanner-beam').classList.remove('hidden');
 
-            const parts = [{ text: `Проаналізуй фото їжі (опис: "${userNote || 'немає'}"). Визнач інгредієнти, вагу та КБЖВ на 100г. Українською мовою.` }];
+            const parts = [{ text: plateInstruction(userNote) }];
             if (aiScannerState.base64Data) parts.push({ inlineData: { mimeType: aiScannerState.mimeType, data: aiScannerState.base64Data } });
 
+            // Секунди очікування на кнопці: видно, що додаток працює
+            const t0 = Date.now(), label = document.getElementById('btn-analyze-text');
+            const tick = setInterval(() => { label.textContent = 'ШІ аналізує тарілку… ' + Math.round((Date.now() - t0) / 1000) + ' с'; }, 1000);
+
             try {
-                const res = await fetchGeminiWithBackoff({
-                    contents: [{ role: 'user', parts }],
-                    generationConfig: {
-                        responseMimeType: "application/json",
-                        responseSchema: {
-                            type: "OBJECT",
-                            properties: {
-                                dishTitle: { type: "STRING" },
-                                summary: { type: "STRING" },
-                                items: {
-                                    type: "ARRAY",
-                                    items: {
-                                        type: "OBJECT",
-                                        properties: {
-                                            name: { type: "STRING" },
-                                            grams: { type: "NUMBER" },
-                                            kcalPer100: { type: "NUMBER" },
-                                            pPer100: { type: "NUMBER" },
-                                            fPer100: { type: "NUMBER" },
-                                            cPer100: { type: "NUMBER" }
-                                        }
-                                    }
-                                }
-                            }
+                let items = [], parsed = null, dropped = 0;
+                for (let attempt = 0; attempt < 2 && !items.length; attempt++) {
+                    const res = await fetchGeminiWithBackoff({
+                        contents: [{ role: 'user', parts }],
+                        generationConfig: {
+                            temperature: 0.2,
+                            maxOutputTokens: 4096,
+                            thinkingConfig: { thinkingBudget: 0 },   // без довгих роздумів: набагато швидше
+                            responseMimeType: "application/json",
+                            responseSchema: AI_PLATE_SCHEMA
                         }
-                    }
-                });
-                const parsed = JSON.parse(res?.candidates?.[0]?.content?.parts?.[0]?.text);
-                displayAIDetectedPlate(parsed.dishTitle, parsed.summary, parsed.items || []);
+                    });
+                    try { parsed = JSON.parse(res?.candidates?.[0]?.content?.parts?.[0]?.text); } catch (e) { parsed = null; }
+                    const raw = parsed && parsed.items;
+                    items = cleanAIItems(raw);
+                    dropped = (Array.isArray(raw) ? raw.length : 0) - items.length;
+                }
+                if (!items.length) {
+                    showAIError('ШІ не зміг порахувати калорії для цього фото. Спробуйте ще раз або допишіть уточнення, наприклад: «омлет, гречка, авокадо».');
+                } else {
+                    displayAIDetectedPlate(parsed.dishTitle, parsed.summary, items);
+                    if (dropped > 0) showToast('Частину позицій ШІ не оцінив, додайте їх вручну');
+                }
             } catch (err) {
                 showAIError(describeGeminiError(err));
             } finally {
+                clearInterval(tick);
                 document.getElementById('btn-analyze-photo').disabled = false;
                 document.getElementById('btn-analyze-text').textContent = 'Розпізнати страву та порахувати КБЖВ';
                 document.getElementById('ai-scanner-beam').classList.add('hidden');
