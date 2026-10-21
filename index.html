@@ -146,6 +146,12 @@
                     <span class="hidden sm:inline">AI-Сканер</span>
                 </button>
 
+                <!-- ШІ-дієтолог -->
+                <button onclick="toggleCoach(true)" class="inline-flex items-center space-x-1.5 text-xs font-bold text-violet-700 bg-violet-50 hover:bg-violet-100 border border-violet-200 px-2.5 sm:px-3 py-2 rounded-xl transition-colors" aria-label="ШІ-дієтолог">
+                    <i data-lucide="MessageCircle" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">ШІ-дієтолог</span>
+                </button>
+
                 <!-- Як встановити -->
                 <button onclick="toggleInstallModal(true)" class="inline-flex items-center space-x-1.5 text-xs font-semibold text-slate-700 hover:text-emerald-700 bg-slate-100 hover:bg-emerald-50 border border-slate-200/80 px-2.5 sm:px-3 py-2 rounded-xl transition-colors" title="Як встановити додаток на телефон">
                     <i data-lucide="Smartphone" class="w-4 h-4 text-emerald-600"></i>
@@ -843,6 +849,44 @@
     </main>
 
     <!-- Модальне вікно: Статистика за 7 днів -->
+    <!-- ШІ-дієтолог: аналіз харчування й чат -->
+    <div id="modal-coach" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-stretch sm:items-center justify-center sm:p-4" role="dialog" aria-modal="true" aria-label="ШІ-дієтолог">
+        <div class="bg-white sm:rounded-2xl w-full sm:max-w-2xl flex flex-col shadow-xl border border-slate-200 overflow-hidden h-[100dvh] sm:h-[85vh]" id="coach-panel">
+            <div class="flex items-center justify-between gap-2 px-4 py-3 border-b border-slate-200" style="padding-top: max(0.75rem, env(safe-area-inset-top));">
+                <div class="flex items-center space-x-2.5 min-w-0">
+                    <div class="p-2 bg-violet-100 text-violet-700 rounded-xl flex-shrink-0"><i data-lucide="MessageCircle" class="w-5 h-5"></i></div>
+                    <div class="min-w-0">
+                        <h3 class="text-base font-bold text-slate-900 leading-tight">ШІ-дієтолог</h3>
+                        <p class="text-[11px] text-slate-500 truncate">Бачить ваш щоденник, норму й вагу</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1 flex-shrink-0">
+                    <button type="button" onclick="coachClear()" class="text-xs font-semibold text-slate-600 hover:text-rose-600 px-2.5 py-1.5 rounded-lg hover:bg-slate-100">Очистити</button>
+                    <button type="button" onclick="toggleCoach(false)" aria-label="Закрити" class="text-slate-500 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100"><i data-lucide="X" class="w-5 h-5"></i></button>
+                </div>
+            </div>
+
+            <div class="px-4 py-2 border-b border-slate-100 flex items-center gap-2 text-xs">
+                <span class="text-slate-500 font-semibold whitespace-nowrap">Дані за:</span>
+                <div class="inline-flex bg-slate-100 rounded-xl p-0.5" id="coach-period" role="group" aria-label="Період для аналізу">
+                    <button type="button" data-period="1" onclick="coachSetPeriod(1)" class="coach-period-btn px-3 py-1.5 rounded-lg font-semibold">Сьогодні</button>
+                    <button type="button" data-period="7" onclick="coachSetPeriod(7)" class="coach-period-btn px-3 py-1.5 rounded-lg font-semibold">7 днів</button>
+                    <button type="button" data-period="30" onclick="coachSetPeriod(30)" class="coach-period-btn px-3 py-1.5 rounded-lg font-semibold">30 днів</button>
+                </div>
+            </div>
+
+            <div id="coach-messages" class="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-slate-50" aria-live="polite"></div>
+
+            <div id="coach-chips" class="px-4 pt-2 pb-1 flex gap-2 overflow-x-auto bg-white border-t border-slate-100"></div>
+
+            <form id="coach-form" onsubmit="coachSend(event)" class="px-3 py-3 bg-white flex items-end gap-2" style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom));">
+                <textarea id="coach-input" rows="1" maxlength="1000" placeholder="Запитайте про своє харчування…" class="flex-1 resize-none bg-slate-100 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-violet-500 focus:bg-white" style="max-height: 7rem;"></textarea>
+                <button type="submit" id="coach-send" aria-label="Надіслати" class="flex-shrink-0 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white rounded-xl p-3"><i data-lucide="Send" class="w-5 h-5"></i></button>
+            </form>
+            <p class="px-4 pb-2 text-[10px] text-slate-400 bg-white leading-snug">Поради ШІ орієнтовні й не замінюють лікаря чи дієтолога. Дані вашого щоденника надсилаються в Google Gemini разом із питанням.</p>
+        </div>
+    </div>
+
     <div id="modal-stats" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-xl border border-slate-200 my-8">
             <div class="flex items-center justify-between mb-4">
@@ -2631,6 +2675,202 @@
             addFoodToActiveMeal(newFood.id);
             renderFoodDatabase();
         }
+
+        // ==========================================
+        // ШІ-ДІЄТОЛОГ: АНАЛІЗ ХАРЧУВАННЯ І ЧАТ
+        // ==========================================
+        const COACH_KEY = 'nutriplan_ai_chat_v1';
+        const COACH_MEALS = [['breakfast', 'Сніданок'], ['lunch', 'Обід'], ['dinner', 'Вечеря'], ['snack', 'Перекус']];
+        const COACH_CHIPS = [
+            'Проаналізуй моє харчування',
+            'Чого мені не вистачає?',
+            'Що з’їсти на вечерю, щоб вкластися в норму?',
+            'Чому може не бути прогресу у вазі?'
+        ];
+        let coach = { period: 7, msgs: [], busy: false, loaded: false };
+
+        function coachLoad() {
+            if (coach.loaded) return;
+            coach.loaded = true;
+            try {
+                const o = JSON.parse(localStorage.getItem(COACH_KEY) || '{}');
+                if ([1, 7, 30].includes(o.period)) coach.period = o.period;
+                if (Array.isArray(o.msgs)) coach.msgs = o.msgs.filter(m => m && (m.role === 'user' || m.role === 'model') && typeof m.text === 'string').slice(-40);
+            } catch (e) { /* без збереженої розмови */ }
+        }
+        function coachSave() {
+            try { localStorage.setItem(COACH_KEY, JSON.stringify({ period: coach.period, msgs: coach.msgs.slice(-40) })); } catch (e) { /* сховище недоступне */ }
+        }
+
+        function coachDateStr(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+
+        // Страви дня з підрахунком: [{ key, label, items: [{ name, grams, kcal, p, f, c }] }] і підсумок
+        function coachDay(dateStr) {
+            const day = state.history[dateStr], foods = getAllFoods();
+            const out = { meals: [], kcal: 0, p: 0, f: 0, c: 0, logged: false };
+            COACH_MEALS.forEach(([key, label]) => {
+                const items = [];
+                ((day && day[key]) || []).forEach(it => {
+                    const food = foods.find(fd => fd.id === it.foodId); if (!food) return;
+                    const r = (Number(it.grams) || 0) / 100;
+                    const row = { name: food.name, grams: Math.round(Number(it.grams) || 0), kcal: Math.round(food.kcal * r), p: food.p * r, f: food.f * r, c: food.c * r };
+                    items.push(row); out.kcal += row.kcal; out.p += row.p; out.f += row.f; out.c += row.c;
+                });
+                if (items.length) { out.meals.push({ key: key, label: label, items: items }); out.logged = true; }
+            });
+            return out;
+        }
+
+        // Усе, що ШІ має знати про користувача, у вигляді тексту (будується заново з кожним питанням, тож дані завжди свіжі)
+        function buildCoachContext(period) {
+            const pr = state.profile, t = state.targets || {};
+            const goalName = { lose: 'схуднення', maintain: 'підтримання ваги', gain: 'набір ваги' }[pr.goal] || pr.goal;
+            const L = [];
+            L.push('ПРОФІЛЬ: ' + (pr.gender === 'male' ? 'чоловік' : 'жінка') + ', ' + pr.age + ' р., вага ' + pr.weight + ' кг, зріст ' + pr.height + ' см, коефіцієнт активності ' + pr.activity + ', ціль: ' + goalName + (pr.modifierPct ? ' (' + (pr.modifierPct > 0 ? '+' : '') + pr.modifierPct + '% до витрат)' : '') + '.');
+            L.push('НОРМА НА ДЕНЬ: ' + t.kcal + ' ккал, білки ' + t.pGrams + ' г, жири ' + t.fGrams + ' г, вуглеводи ' + t.cGrams + ' г (основний обмін ' + t.bmr + ', загальні витрати ' + t.tdee + ' ккал).');
+            const today = new Date(); today.setHours(12, 0, 0, 0);
+            const days = [], logged = [];
+            for (let i = period - 1; i >= 0; i--) {
+                const d = new Date(today); d.setDate(d.getDate() - i);
+                const ds = coachDateStr(d), info = coachDay(ds);
+                days.push({ ds: ds, d: d, info: info }); if (info.logged) logged.push(info);
+            }
+            L.push('ПЕРІОД: останні ' + period + ' ' + (period === 1 ? 'день (сьогодні)' : 'днів') + ', записи є за ' + logged.length + ' з ' + period + '. Дні без записів означають, що користувач нічого не вносив (це не голодування).');
+            // Сьогоднішній день ще не закінчився, тож у середніх і підрахунку недобору не враховується, якщо є повні дні
+            const todayInfo = days[days.length - 1].info, full = (period > 1 && logged.length > (todayInfo.logged ? 1 : 0)) ? logged.filter(x => x !== todayInfo) : logged;
+            if (full.length) {
+                const avg = k => Math.round(full.reduce((a, x) => a + x[k], 0) / full.length);
+                const over = full.filter(x => x.kcal > t.kcal + 50).length, under = full.filter(x => x.kcal < t.kcal * 0.85).length;
+                L.push('СЕРЕДНЄ за ' + full.length + ' повних днів із записами' + (full.length !== logged.length ? ' (без сьогоднішнього, він ще не закінчився)' : '') + ': ' + avg('kcal') + ' ккал, білки ' + avg('p') + ' г, жири ' + avg('f') + ' г, вуглеводи ' + avg('c') + ' г. Днів із перебором понад норму: ' + over + ', із недобором більш ніж на 15%: ' + under + '.');
+            }
+            days.forEach(x => {
+                const wd = x.d.toLocaleDateString('uk-UA', { weekday: 'long' });
+                const water = state.water && state.water[x.ds], weight = state.weights && state.weights[x.ds];
+                if (!x.info.logged && !water && !weight) return;
+                let line = x.ds + ' (' + wd + (x.ds === coachDateStr(new Date()) ? ', сьогодні, день ще не закінчився' : '') + '): ' + (x.info.logged ? 'разом ' + Math.round(x.info.kcal) + ' ккал, Б ' + Math.round(x.info.p) + ', Ж ' + Math.round(x.info.f) + ', В ' + Math.round(x.info.c) : 'їжу не вносили');
+                if (water) line += '; вода ' + water + ' мл';
+                if (weight) line += '; вага ' + weight + ' кг';
+                L.push(line);
+                x.info.meals.forEach(m => L.push('   ' + m.label + ': ' + m.items.map(i => i.name + ' ' + i.grams + ' г (' + i.kcal + ' ккал)').join('; ')));
+            });
+            const ws = Object.keys(state.weights || {}).sort().slice(-30).map(k => k + ': ' + state.weights[k] + ' кг');
+            if (ws.length) L.push('ІСТОРІЯ ВАГИ (до 30 останніх записів): ' + ws.join('; ') + '.');
+            return L.join('\n');
+        }
+
+        function coachSystemPrompt(period) {
+            return 'Ти дружній, уважний дієтолог у застосунку NutriPlan. Відповідай українською, коротко й по суті: зазвичай 3–8 речень або короткий список. ' +
+                'Спирайся лише на дані користувача нижче, не вигадуй того, чого там немає; якщо даних замало (мало днів із записами), прямо скажи про це. ' +
+                'Порівнюй із нормою користувача, звертай увагу на білок, клітковину, цукор, воду, регулярність і розмір порцій, пропонуй конкретні прості кроки та продукти. ' +
+                'Не став діагнозів, не радь дуже низькокалорійних дієт, голодування чи добавок у лікувальних дозах; при проблемах зі здоров’ям, вагітності чи хронічних хворобах радь звернутися до лікаря. ' +
+                'Якщо питання не про харчування, ввічливо поверни розмову до теми. Не повторюй усі дані назад, а роби висновки.\n\n=== ДАНІ КОРИСТУВАЧА ===\n' + buildCoachContext(period);
+        }
+
+        // Мінімальне форматування відповіді: **жирний**, списки, абзаци (усе інше екранується)
+        function coachMd(text) {
+            const lines = escapeHtml(text).split(/\r?\n/);
+            let html = '', list = null;
+            const close = () => { if (list) { html += '</' + list + '>'; list = null; } };
+            const inline = s => s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/(^|[^*])\*([^*\s][^*]*?)\*(?!\*)/g, '$1<em>$2</em>');
+            lines.forEach(raw => {
+                const l = raw.trim();
+                let m;
+                if ((m = /^[-*•]\s+(.*)$/.exec(l))) { if (list !== 'ul') { close(); html += '<ul class="list-disc pl-5 space-y-0.5 my-1">'; list = 'ul'; } html += '<li>' + inline(m[1]) + '</li>'; }
+                else if ((m = /^\d+[.)]\s+(.*)$/.exec(l))) { if (list !== 'ol') { close(); html += '<ol class="list-decimal pl-5 space-y-0.5 my-1">'; list = 'ol'; } html += '<li>' + inline(m[1]) + '</li>'; }
+                else if (!l) { close(); }
+                else { close(); html += '<p class="my-1">' + inline(l.replace(/^#+\s*/, '')) + '</p>'; }
+            });
+            close();
+            return html;
+        }
+
+        function coachRender() {
+            const box = document.getElementById('coach-messages');
+            if (!box) return;
+            let html = '';
+            if (!coach.msgs.length) {
+                html += '<div class="bg-white border border-slate-200 rounded-2xl p-4 text-sm text-slate-700 leading-relaxed">' +
+                    '<p class="font-bold text-slate-900 mb-1">Привіт! Я проаналізую ваше харчування.</p>' +
+                    '<p>Я бачу записи щоденника, вашу норму, воду й вагу за обраний період. Натисніть підказку внизу або напишіть своє питання: наприклад, чи вистачає білка, що змінити у раціоні, чим замінити солодке.</p></div>';
+            }
+            coach.msgs.forEach(m => {
+                if (m.role === 'user') html += '<div class="flex justify-end"><div class="max-w-[85%] bg-violet-600 text-white rounded-2xl rounded-br-md px-3.5 py-2 text-sm whitespace-pre-wrap break-words">' + escapeHtml(m.text) + '</div></div>';
+                else html += '<div class="flex justify-start"><div class="max-w-[92%] ' + (m.error ? 'bg-rose-50 border-rose-200 text-rose-800' : 'bg-white border-slate-200 text-slate-800') + ' border rounded-2xl rounded-bl-md px-3.5 py-2 text-sm leading-relaxed break-words">' + (m.error ? escapeHtml(m.text) : coachMd(m.text)) + '</div></div>';
+            });
+            if (coach.busy) html += '<div class="flex justify-start"><div id="coach-typing" class="bg-white border border-slate-200 text-slate-500 rounded-2xl rounded-bl-md px-3.5 py-2 text-sm">Дієтолог думає… <span id="coach-sec">0</span> с</div></div>';
+            box.innerHTML = html;
+            box.scrollTop = box.scrollHeight;
+            document.querySelectorAll('.coach-period-btn').forEach(b => {
+                const on = Number(b.dataset.period) === coach.period;
+                b.className = 'coach-period-btn px-3 py-1.5 rounded-lg font-semibold ' + (on ? 'bg-white text-violet-700 shadow-2xs' : 'text-slate-600');
+                b.setAttribute('aria-pressed', on ? 'true' : 'false');
+            });
+            const chips = document.getElementById('coach-chips');
+            chips.innerHTML = COACH_CHIPS.map((c, i) => '<button type="button" data-chip="' + i + '" class="coach-chip flex-shrink-0 text-xs font-semibold text-violet-700 bg-violet-50 hover:bg-violet-100 border border-violet-200 rounded-full px-3 py-1.5 whitespace-nowrap"' + (coach.busy ? ' disabled' : '') + '>' + escapeHtml(c) + '</button>').join('');
+            chips.querySelectorAll('.coach-chip').forEach(b => b.addEventListener('click', () => coachAsk(COACH_CHIPS[Number(b.dataset.chip)])));
+            document.getElementById('coach-send').disabled = coach.busy;
+        }
+
+        function toggleCoach(show) {
+            coachLoad();
+            const m = document.getElementById('modal-coach');
+            m.classList.toggle('hidden', !show);
+            document.body.style.overflow = show ? 'hidden' : '';
+            if (show) coachRender();
+            if (window.lucide && lucide.createIcons) lucide.createIcons();
+        }
+        function coachSetPeriod(p) { if (coach.busy) return; coach.period = p; coachSave(); coachRender(); }
+        function coachClear() {
+            if (coach.busy) return;
+            if (coach.msgs.length && !window.confirm('Очистити розмову з дієтологом?')) return;
+            coach.msgs = []; coachSave(); coachRender();
+        }
+        function coachSend(ev) {
+            if (ev) ev.preventDefault();
+            const inp = document.getElementById('coach-input');
+            const text = inp.value.trim();
+            if (!text) return;
+            inp.value = ''; inp.style.height = 'auto';
+            coachAsk(text);
+        }
+
+        async function coachAsk(text) {
+            if (coach.busy) return;
+            coachLoad();
+            coach.msgs.push({ role: 'user', text: String(text).slice(0, 1000) });
+            coach.busy = true; coachSave(); coachRender();
+            const t0 = Date.now();
+            const tick = setInterval(() => { const s = document.getElementById('coach-sec'); if (s) s.textContent = Math.round((Date.now() - t0) / 1000); }, 1000);
+            try {
+                // Історія без повідомлень-помилок; Gemini вимагає, щоб розмова починалася з користувача й ролі чергувалися
+                const hist = coach.msgs.filter(m => !m.error).slice(-14);
+                while (hist.length && hist[0].role !== 'user') hist.shift();
+                const contents = [];
+                hist.forEach(m => { const last = contents[contents.length - 1]; if (last && last.role === m.role) last.parts[0].text += '\n' + m.text; else contents.push({ role: m.role, parts: [{ text: m.text }] }); });
+                const res = await fetchGeminiWithBackoff({
+                    systemInstruction: { parts: [{ text: coachSystemPrompt(coach.period) }] },
+                    contents: contents,
+                    generationConfig: { temperature: 0.4, maxOutputTokens: 4096, thinkingConfig: { thinkingBudget: 512 } }
+                });
+                const cand = res && res.candidates && res.candidates[0];
+                const out = ((cand && cand.content && cand.content.parts) || []).filter(p => p && p.text && !p.thought).map(p => p.text).join('').trim();
+                if (!out) coach.msgs.push({ role: 'model', text: 'ШІ не дав відповіді на це питання. Спробуйте сформулювати інакше.', error: true });
+                else coach.msgs.push({ role: 'model', text: out });
+            } catch (err) {
+                coach.msgs.push({ role: 'model', text: describeGeminiError(err).replace('Не вдалося розпізнати страву. Спробуйте інше фото або додайте уточнення в текстове поле.', 'Не вдалося отримати відповідь. Спробуйте ще раз.'), error: true });
+            } finally {
+                clearInterval(tick);
+                coach.busy = false; coachSave(); coachRender();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const inp = document.getElementById('coach-input');
+            if (inp) {
+                inp.addEventListener('input', () => { inp.style.height = 'auto'; inp.style.height = Math.min(inp.scrollHeight, 112) + 'px'; });
+                inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && window.matchMedia('(min-width: 640px)').matches) { e.preventDefault(); coachSend(); } });
+            }
+        });
 
         // ==========================================
         // ТИЖНЕВИЙ ЗВІТ (СТАТИСТИКА ЗА 7 ДНІВ)
